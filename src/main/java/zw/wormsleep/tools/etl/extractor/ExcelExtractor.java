@@ -101,7 +101,7 @@ public class ExcelExtractor implements ETLExtractor {
 
 		@Override
 		public boolean hasNext() {
-			return (rowIndex < rowEnd);
+			return (rowIndex <= rowEnd);
 		}
 
 		@Override
