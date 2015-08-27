@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<etl>
+	<!-- 模板 -->
+	<resource businesstype="business">
+		<!-- 数据源 - 数据库 -->
+		<input type="database">
+			<database type="sybase">输入数据库节点名称（其节点在本文件里的 database 节点中定义）</database>
+			<!-- SQL 语句 - 支持标准SQL、存储过程，其中 SQL 可以自定义参数（如 :PARAM） -->
+			<sql>
+				<![CDATA[
+				SELECT 1
+				]]>
+			</sql>
+			<fetchsize>10000 ( 默认: 10000 )</fetchsize>
+		</input>
+		<!-- 数据源 - 文件 （text、data、excel（支持 xls 和 xlsx）、xml）-->
+		<input type="file">
+			<!-- 文件类型 - 支持 text、data、excel、xml -->
+			<filetype>text</filetype>
+			<!-- 分隔符 - 对于按域分隔的文件指定分隔符，默认为 tab 字符（特殊分隔符 - 对应 unicode 码 tab \\u0009） -->
+			<separator>tab (default)</separator>
+			<!-- 文件编码 - 默认为 UTF-8。若为其它编码则按 JAVA 标准方式书写-->
+			<encoding>GBK || default UTF-8</encoding>
+		</input>
+		<!-- 输出地 - 数据库 -->
+		<output type="database">
+			<database type="sybase">输出数据库节点名称（其节点在本文件里的 database 节点中定义）</database>
+			<table>table name</table>
+			<batchsize>200 ( 默认: 200 )</batchsize>
+		</output>
+		<!-- 输出地 - 文件 -->
+		<output type="file">
+			<filetype>excel || text || xml</filetype>
+			<encoding>GBK || default UTF-8</encoding>
+			<maxrowsperfile>100</maxrowsperfile>
+			<withheader>true || false (default)</withheader>
+		</output>
+		
+		<!-- 列定义 - 定义来源和目标的列名（这里定义的列对应于目标输出列，也就是说需要输出的必须在此定义） 
+					@header 对于有列头的数据文件（如 excel）进行匹配检查，默认检查前 10 行中是否匹配其 header -->
+		<columns header="true">
+			<!-- 通用列 
+				   column 
+				   		@key	逻辑主键定义（自动生成排重复 SQL 插入语句（目前仅支持 sybase、mysql））
+				   		@type	转换列 - 支持三种类型的对来源值的转换，自定义转换规则列特殊处理
+				   						1、自动生成列（包括 uuid 和 date）
+				   						2、常量值列
+				   						3、映射值列
+				   						4、自定义转换规则列（可以通过实现 ETLTransformer 接口进行处理）
+				   		@check 对来源文件 header 列的匹配检查，默认为 ture 即进行匹配检查
+				   						1、若 Excel 文件有 header 列，可通过此检查
+				   						2、对于不在来源文件中又需要输出至目标的列，
+				   							 可以设置 check="false" 避免匹配检查，
+				   							 其值可通过转换列规则处理，
+				   							 也可以通过实现 ETLTransformer 接口进行处理
+				   		
+				   		name	 描述数据来源的待获取列名
+				   						1、对于 excel 为其 header 名称、对于 xml 为其 node 名称
+				   						2、对于来源为数据库的或文件中无 Header 定义的可以省略
+				   						3、对于来源为数据库的其 SQL 返回结果集的字段名作为 name 值，因此必须与 field 值一致
+				   		index	 描述数据来源的待获取索引（对于来源为文件的且无 Header 定义的可以通过此定义）
+				   		field      描述数据目标的待保存列名
+				    -->
+			<column>
+				<name>column-name</name>
+				<index>column-index</index>
+				<field>field-name</field>
+			</column>
+			<!-- 逻辑主键列 -->
+			<column key="true">
+				<name>key-column-name</name>
+				<field>key-field-name</field>
+			</column>
+			<!-- 自动生成列 
+						@type auto-generate 自动生成 
+						@value uuid 由程序自动生成 uuid date 日期 
+						@check false 不检查或匹配该列；true 匹配该列且值由 uuid 替换 -->
+			<column type="auto-generate" value="uuid" check="false">
+				<field>uuid-field-name</field>
+			</column>
+			<column type="auto-generate" value="date" check="false">
+				<field>date-field-name</field>
+			</column>
+			<!-- 常量值列 -->
+			<column type="constant" value="constant-value" check="false">
+				<name>constant-column-name</name>
+				<field>constant-field-name</field>
+			</column>
+			<!-- 对应值转换列 -->
+			<column type="map">
+				<name>map-column-name</name>
+				<field>map-field-name</field>
+				<mapping>
+					<item>
+						<key>key1</key>
+						<value>value1</value>
+					</item>
+					<item>
+						<key>key2</key>
+						<value>value2</value>
+					</item>
+				</mapping>
+			</column>
+			<!-- 格式化转换列 （暂时通过自定义数据值列处理）-->
+			<column type="format" value="constant-value" check="false">
+				<name>constant-column-name</name>
+				<field>constant-field-name</field>
+			</column>
+			<!-- 自定义数据值列 - 可以通过实现 ETLTransformer 接口进行处理 -->
+			<column>
+				<field>custom-field-name</field>
+			</column>
+		</columns>
+	</resource>
+	
+	<!-- 示例 - 数据库 SQL 对表输出 -->
+	<resource businesstype="business-sql2table">
+		<input type="database">
+			<database type="sybase">database-subnode-name</database>
+			<sql>
+				<![CDATA[
+				SELECT FIELD1,FIELD2,FIELD3 
+				FROM TABLE_NAME WHERE FIELD4 like :PARAM1
+				]]>
+			</sql>
+		</input>
+
+		<output type="database">
+			<database type="sybase">database-subnode-name</database>
+			<table>table-name</table>
+		</output>
+		
+		<columns>
+			<column type="auto-generate" value="uuid" check="false">
+				<field>ID</field>
+			</column>
+			<column key="true">
+				<field>FIELD1</field>
+			</column>
+			<column>
+				<field>FIELD2</field>
+			</column>
+			<column>
+				<field>FIELD3</field>
+			</column>
+		</columns>
+	</resource>
+	
+	
+	
+	<!-- 示例 - 数据库表对表拷贝 
+		注意
+		1. 目标数据库表需要存在
+		2. 目标数据库表名可与源数据库表名不一致
+		3. 目标数据库字段名必须同源数据库一致
+		4. 支持转换器进行数值转换
+		5. 目标数据库表首先将进行数据库清除 ( truncate )
+	-->
+	<resource businesstype="business-table2table">
+		<input type="database">
+			<database type="sybae">本文件 database 节点中源数据库子节点名称 ( c3p0 配置 )</database>
+			<table>表名</table>
+		</input>
+
+		<output type="database">
+			<database type="mysql">本文件 database 节点中目标数据库子节点名称 ( c3p0 配置 )</database>
+			<table>表名</table>
+		</output>
+	</resource>
+	
+	<!-- 示例 - 同构或异构数据库批量表对表拷贝 ( 支持多线程 ) -->
+	<!-- 目前支持功能
+			1. 自动创建目标数据库表实体 ( 可配置 )
+			2. 自动生成本任务专用配置文件
+			3. 自动采集数据 ( 可配置 )
+			4. 支持多线程并发执行 ( 单表单线程, 线程安全 )
+			
+			用法
+			1. 同构或异构数据库批量创建表 ( 表名, 主键, 字段及类型与源数据库一致 )
+			2. 同构或异构数据库批量传输表数据
+			
+			特殊
+			1. 对于模式 - 遵循 JDBC 标准 - 支持 _ % 通配符 - 若需要下划线或百分号通配符，则需要在前面加上 //
+	 -->
+	<resource businesstype="business-tables2tables">
+		<input type="database">
+			<database type="sybae">database-subnode-name</database>
+			<catalog>源数据库 - 目录名 ( 默认值 null )</catalog>
+			<schemapattern>源数据库 - 纲要模式 ( 遵循 JDBC 标准 - 支持 _ % 通配符 ) ( 默认值 null )</schemapattern>
+			<tablepattern>源数据库 - 表名模式 ( 遵循 JDBC 标准 - 支持 _ % 通配符 ) ( 默认值 null )</tablepattern>
+		</input>
+
+		<output type="database">
+			<database type="oracle">database-subnode-name</database>
+			<catalog>目标数据库 - 目录名 ( 默认值 null )</catalog>
+			<schemapattern>目标数据库 - 纲要模式 ( 默认 null )</schemapattern>
+			<autocreatetable>是否自动创建目标数据库表 ( 默认值 true )</autocreatetable>
+			<transmitdata>是否传输表对表数据 ( 默认值 true )</transmitdata>
+			<threadcount>线程数 ( 默认值 1 )</threadcount>
+		</output>
+	</resource>
+	
+	<!-- 示例 - Text 文件对数据库（空值转换规则为 null） -->
+	<resource businesstype="business-text2database">
+		<input type="file">
+			<filetype>txt</filetype>
+			<separator>tab</separator>
+			<encoding>GBK</encoding>
+		</input>
+
+		<output type="database">
+			<database type="mysql">database-subnode-name</database>
+			<table>table-name</table>
+		</output>
+
+		<columns>
+			<column>
+				<index>0</index>
+				<field>field1</field>
+			</column>
+			<column>
+				<index>1</index>
+				<field>field2</field>
+			</column>
+			<column>
+				<index>2</index>
+				<field>field3</field>
+			</column>
+			<column>
+				<index>3</index>
+				<field>field4</field>
+			</column>
+			<column>
+				<index>4</index>
+				<field>field5</field>
+			</column>
+			<column type="auto-generate" value="uuid" check="false">
+				<field>id</field>
+			</column>
+		</columns>
+	</resource>
+	
+	<!-- 示例 - Excel 文件对数据库（空值转换规则为 null） -->
+	<resource businesstype="business-excel2database">
+		<input type="file">
+			<filetype>excel</filetype>
+			<!-- 数据抽取起始行序号，默认值为 0 -->
+			<rowstart>start-row-number</rowstart>
+			<!-- 数据抽取终止行序号，默认值为文件末行数 -->
+			<rowend>end-row-number</rowend>
+			<!-- Header 匹配检查最大行数，默认值为 10 行 -->
+			<maxheaderrows>max-check-header-number</maxheaderrows>
+		</input>
+
+		<output type="database">
+			<database type="mysql">database-subnode-name</database>
+			<table>table-name</table>
+		</output>
+
+		<columns header="true">
+			<column>
+				<name>header-column-name</name>
+				<field>field1</field>
+			</column>
+			<column>
+				<name>header-column-name</name>
+				<field>field2</field>
+			</column>
+			<column>
+				<name>header-column-name</name>
+				<field>field3</field>
+			</column>
+			<column>
+				<name>header-column-name</name>
+				<field>field4</field>
+			</column>
+		</columns>
+	</resource>
+	
+	<!-- 示例 - XML 文件对数据库 （空值转换规则为空字符串）-->
+	<resource businesstype="business-xml2database">
+		<input type="file">
+			<filetype>xml</filetype>
+			<encoding>UTF-8</encoding>
+			<xpath>//DZPT/BODY/DSMXS/DSMX</xpath>
+		</input>
+
+		<output type="database">
+			<database type="sybase">database-subnode-name</database>
+			<table>table-name</table>
+		</output>
+
+		<columns>
+			<column>
+				<name>node-name</name>
+				<field>field1</field>
+			</column>
+			<column>
+				<name>node-name</name>
+				<field>field2</field>
+			</column>
+			<column>
+				<name>node-name</name>
+				<field>field3</field>
+			</column>
+			<column>
+				<name>node-name</name>
+				<field>field4</field>
+			</column>
+			<!-- 自定义转换规则 -->
+			<column check="false">
+				<field>id</field>
+			</column>
+			<!-- 自定义转换规则 -->
+			<column check="false">
+				<field>jylsh</field>
+			</column>
+		</columns>
+	</resource>
+	
+	<!-- 示例 - 数据库导出 Text -->
+	<resource businesstype="business-databse2text">
+		<input type="database">
+			<database type="sybase">database-subnode-name</database>
+			<table>table-name</table>
+		</input>
+
+		<output type="file">
+			<filetype>text</filetype>
+			<separator>tab</separator>
+			<encoding>GBK</encoding>
+		</output>
+	</resource>
+	
+	<!-- 示例 - 数据库导出 Excel -->
+	<resource businesstype="business-databse2text">
+		<input type="database">
+			<database type="sybase">database-subnode-name</database>
+			<sql>
+				<![CDATA[
+				SELECT * FROM TABLE_NAME WHRE EXPRESS
+				EXEC DBO.PROCDURE_NAME ':PARAM1',':PARAM2',:PARAM3
+				]]>
+			</sql>
+		</input>
+
+		<output type="file">
+			<filetype>excel</filetype>
+			<templatecollection>data1 || default data1</templatecollection>
+		</output>
+	</resource>
+	
+	
+	<!-- 数据库连接池定义 - 对来源和目标数据库的 c3p0 连接池配置进行定义（注意：不要减少任一属性） -->
+	<database>
+	
+		<!-- 来源 - 数据库 -->
+		<res>
+			<driverClass>com.sybase.jdbc3.jdbc.SybDriver</driverClass>
+
+			<jdbcUrl>jdbc:sybase:Tds:IP:PORT/DATABASE?charset=cp936&amp;jconnect_version=0&amp;language=us_english&amp;DYNAMIC_PREPARE=true</jdbcUrl> 
+			<user>sa</user>
+			<password></password>
+			
+			<initialPoolSize>5</initialPoolSize>
+			<minPoolSize>5</minPoolSize>
+			<maxPoolSize>10</maxPoolSize>
+			<checkoutTimeout>10000</checkoutTimeout>
+			<maxIdleTime>1800</maxIdleTime>
+			<idleConnectionTestPeriod>3000</idleConnectionTestPeriod>
+			<acquireIncrement>5</acquireIncrement>
+			<acquireRetryAttempts>3</acquireRetryAttempts>
+			<testConnectionOnCheckout>true</testConnectionOnCheckout>
+			<preferredTestQuery>SELECT 1</preferredTestQuery>
+		</res>
+		
+		<!-- 目标 - 数据库 -->
+		<dest>
+			<driverClass>com.sybase.jdbc3.jdbc.SybDriver</driverClass>
+
+			<jdbcUrl>jdbc:sybase:Tds:IP:PORT/DATABASE?charset=cp936&amp;jconnect_version=0&amp;language=us_english</jdbcUrl> 
+			<user></user>
+			<password></password>
+			
+			<initialPoolSize>5</initialPoolSize>
+			<minPoolSize>5</minPoolSize>
+			<maxPoolSize>10</maxPoolSize>
+			<checkoutTimeout>10000</checkoutTimeout>
+			<maxIdleTime>1800</maxIdleTime>
+			<idleConnectionTestPeriod>3000</idleConnectionTestPeriod>
+			<acquireIncrement>5</acquireIncrement>
+			<acquireRetryAttempts>3</acquireRetryAttempts>
+			<testConnectionOnCheckout>true</testConnectionOnCheckout>
+			<preferredTestQuery>SELECT 1</preferredTestQuery>
+		</dest>
+	</database>
+
+</etl>

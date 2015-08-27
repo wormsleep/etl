@@ -1,0 +1,15 @@
+# hbgf项目Git忽略文件
+*/.git/*
+*/.svn/*
+*.DS_Store
+.git
+.svn
+_svn
+target/
+.classpath
+.project
+.settings/
+/target
+._*
+
+*.iml 
