@@ -33,10 +33,11 @@ import zw.wormsleep.tools.etl.extractor.XmlExtractor;
 import zw.wormsleep.tools.etl.loader.DatabaseLoader;
 import zw.wormsleep.tools.etl.loader.DatabasePlusLoader;
 import zw.wormsleep.tools.etl.loader.GExcelLoader;
+import zw.wormsleep.tools.etl.loader.TextLoader;
 import zw.wormsleep.tools.etl.transformer.SimpleETLTransformer;
 
 public class ETLUtils {
-	
+
 	/**
 	 * 数据库对数据库
 	 * 
@@ -128,18 +129,17 @@ public class ETLUtils {
 	public static void database2database(String businessType,
 			Map<String, String> parameters, ETLTransformer transformer,
 			File configuration) throws ConfigurationException {
-		
+
 		ExtractConfig extractConfig = null;
 		LoadConfig loadConfig = null;
-		
-		if(configuration != null && configuration.canRead()) {
+
+		if (configuration != null && configuration.canRead()) {
 			extractConfig = new SimpleExtractConfig(businessType, configuration);
 			loadConfig = new SimpleLoadConfig(businessType, configuration);
 		} else {
 			extractConfig = new SimpleExtractConfig(businessType);
 			loadConfig = new SimpleLoadConfig(businessType);
 		}
-		
 
 		ETLExtractor extractor = null;
 		if (parameters != null) {
@@ -157,30 +157,33 @@ public class ETLUtils {
 
 		loader.load(extractor, transformer);
 	}
-	
+
 	/**
 	 * 同构或异构数据库表对表拷贝
 	 * 
 	 * @param businessType
 	 * @throws ConfigurationException
 	 */
-	public static void tables2tables(String businessType) throws ConfigurationException {
+	public static void tables2tables(String businessType)
+			throws ConfigurationException {
 		ExtractConfig extractConfig = new SimpleExtractConfig(businessType);
 		LoadConfig loadConfig = new SimpleLoadConfig(businessType);
-		
+
 		String srcDatabase = extractConfig.getDatabase();
 		String srcCatalog = extractConfig.getCatalog();
 		String srcSchemaPattern = extractConfig.getSchemaPattern();
 		String srcTableNamePattern = extractConfig.getTablePattern();
-		
+
 		String destDatabase = loadConfig.getDatabase();
 		String destCatalog = loadConfig.getCatalog();
 		String destSchemaPattern = loadConfig.getSchemaPattern();
 		boolean dropandcreate = loadConfig.getAutoCreateTable();
 		boolean copydata = loadConfig.getTransmitData();
 		int threadCount = loadConfig.getThreadCount();
-		
-		DatabaseHelper.tables2tables(srcDatabase, srcCatalog, srcSchemaPattern, srcTableNamePattern, destDatabase, destCatalog, destSchemaPattern, dropandcreate, copydata, threadCount);
+
+		DatabaseHelper.tables2tables(srcDatabase, srcCatalog, srcSchemaPattern,
+				srcTableNamePattern, destDatabase, destCatalog,
+				destSchemaPattern, dropandcreate, copydata, threadCount);
 	}
 
 	/**
@@ -410,7 +413,7 @@ public class ETLUtils {
 		loader.load(extractor, transformer);
 
 	}
-	
+
 	/**
 	 * 文本(数据)文件对数据库
 	 * 
@@ -487,9 +490,9 @@ public class ETLUtils {
 	 * @throws ConfigurationException
 	 * @throws FileNotFoundException
 	 */
-	private static void text2databasePlusProcessor(Object in, String businessType,
-			ETLTransformer transformer) throws ConfigurationException,
-			FileNotFoundException {
+	private static void text2databasePlusProcessor(Object in,
+			String businessType, ETLTransformer transformer)
+			throws ConfigurationException, FileNotFoundException {
 		ExtractConfig extractConfig = new SimpleExtractConfig(businessType);
 		LoadConfig loadConfig = new SimpleLoadConfig(businessType);
 
@@ -821,7 +824,77 @@ public class ETLUtils {
 		loader.load(extractor, transformer);
 
 	}
-	
+
+	/**
+	 * 数据库对 Text
+	 * 
+	 * @param businessType
+	 *            业务类型
+	 * @param destination
+	 *            目标文件
+	 * @throws ConfigurationException
+	 */
+	public static void database2Text(String businessType, File destination)
+			throws ConfigurationException {
+		database2Text(businessType, null, null, destination);
+	}
+
+	/**
+	 * 数据库对 Text
+	 * 
+	 * @param businessType
+	 *            业务类型
+	 * @param parameters
+	 *            替换 input->sql 中的参数值
+	 * @param destination
+	 *            目标文件
+	 * @throws ConfigurationException
+	 */
+	public static void database2Text(String businessType,
+			Map<String, String> parameters, File destination)
+			throws ConfigurationException {
+		database2Text(businessType, parameters, null, destination);
+	}
+
+	/**
+	 * 数据库对 Text
+	 * 
+	 * @param businessType
+	 *            业务类型
+	 * @param parameters
+	 *            替换 input->sql 中的参数值
+	 * @param transformer
+	 *            转换规则
+	 * @param destination
+	 *            目标文件
+	 * @throws ConfigurationException
+	 */
+	public static void database2Text(String businessType,
+			Map<String, String> parameters, ETLTransformer transformer,
+			File destination) throws ConfigurationException {
+		ExtractConfig extractConfig = new SimpleExtractConfig(businessType);
+
+		LoadConfig loadConfig = new SimpleLoadConfig(businessType);
+
+		ETLExtractor extractor = null;
+		if (parameters != null) {
+			extractor = new DatabaseExtractor(extractConfig, parameters);
+		} else {
+			extractor = new DatabaseExtractor(extractConfig);
+		}
+
+		if (transformer == null) {
+			TransformConfig transformConfig = new SimpleTransformConfig(
+					businessType);
+			transformer = new SimpleETLTransformer(transformConfig);
+		}
+
+		ETLLoader loader = new TextLoader(loadConfig, destination);
+
+		loader.load(extractor, transformer);
+
+	}
+
 	/**
 	 * 辅助类 - 处理格式化的日期
 	 * 
@@ -1011,5 +1084,5 @@ public class ETLUtils {
 			return firstLetter.toUpperCase() + remaining;
 		}
 	}
-	
+
 }

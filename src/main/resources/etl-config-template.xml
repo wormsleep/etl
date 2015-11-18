@@ -32,6 +32,7 @@
 		<output type="file">
 			<filetype>excel || text || xml</filetype>
 			<encoding>GBK || default UTF-8</encoding>
+			<separator>tab (default)</separator>
 			<maxrowsperfile>100</maxrowsperfile>
 			<withheader>true || false (default)</withheader>
 		</output>

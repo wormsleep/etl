@@ -1,7 +1,7 @@
 package zw.wormsleep.tools.etl.config;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,7 +51,7 @@ public class SimpleLoadConfig implements LoadConfig {
 
 	@Override
 	public Map<String, Boolean> getFields() {
-		Map<String, Boolean> fields = new HashMap<String, Boolean>();
+		Map<String, Boolean> fields = new LinkedHashMap<String, Boolean>();
 
 		List<HierarchicalConfiguration> columns = ConfigParserUtils
 				.getColumnConfiguration(business);
