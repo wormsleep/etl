@@ -626,9 +626,8 @@ public class DatabaseHelper {
 			valuesPart.append(":" + key + COMMA);
 			if (fields.get(key)) {
 				wherePart.append(key + "=:" + key + CONST_AND);
-			} else {
-				updatePart.append(key + "=:" + key + COMMA);
 			}
+			updatePart.append(key + "=:" + key + COMMA);
 		}
 		// 静态组装部分
 		if (wherePart.length() > 0) { // 若需要排重语句
@@ -685,9 +684,8 @@ public class DatabaseHelper {
 			asfieldPart.append(":" + key +" AS " + key + COMMA);
 			if (fields.get(key)) {
 				wherePart.append("M."+ key +"=N."+ key + CONST_AND);
-			} else {
-				updatePart.append("M."+ key +"=N."+ key + COMMA);
-			}
+			} 
+			updatePart.append("M."+ key +"=N."+ key + COMMA);
 		}
 		// 静态组装部分
 		if (wherePart.length() > 0) { // 若需要排重语句
