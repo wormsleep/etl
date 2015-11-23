@@ -44,6 +44,9 @@ public class TextLoader implements ETLLoader {
 		BufferedWriter writer = null;
 		
 		try {
+			logger.info("@@@ 导出任务开始 - 目标文件: {}", out.getAbsolutePath());
+			long startTime = System.currentTimeMillis();
+			
 			writer = new BufferedWriter(new FileWriterWithEncoding(out, encoding), BUFFER_SIZE);
 
 			// 准备处理数据抽取的数据
@@ -53,16 +56,22 @@ public class TextLoader implements ETLLoader {
 			Map<String, Boolean> fields = loadConfig.getFields();
 			Map<String, Object> row = null;
 			List<Object> line = new ArrayList<Object>();
+			int index = 0;
 			while (iter.hasNext()) {
 				row = iter.next();
 
 				for (String field : fields.keySet()) {
 					line.add(row.get(field));
 				}
-				writer.newLine();
+				if(index++ > 0) {
+					writer.newLine();
+				}
 				writer.write(StringUtils.join(line.iterator(), seperator));
 				line.clear();
 			}
+			long endTime = System.currentTimeMillis();
+			long consuming = (endTime - startTime) / 1000;
+			logger.info("@@@ 导出任务结束！ - 导出 {} 行, 耗时 {}", index, (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟 " + String.valueOf(consuming % 60) + " 秒") : "小于 1 分钟");
 		} catch (IOException e) {
 			logger.error("IO 异常 !", e);
 		} finally {
