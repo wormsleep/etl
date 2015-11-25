@@ -11,5 +11,6 @@ target/
 .settings/
 /target
 ._*
-
-*.iml 
+*/.idea/*
+.idea
+*.iml
