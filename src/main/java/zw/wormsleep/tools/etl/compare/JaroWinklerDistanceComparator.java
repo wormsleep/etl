@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class JaroWinklerDistanceComparator implements SimilarityComparator {
 
+    private final Double MAX_THRESHOLD = new Double("1.0");
     private Double threshold;
 
     public JaroWinklerDistanceComparator(Double threshold) {
@@ -16,6 +17,6 @@ public class JaroWinklerDistanceComparator implements SimilarityComparator {
 
     @Override
     public boolean compare(String first, String second) {
-        return threshold.compareTo(StringUtils.getJaroWinklerDistance(first, second)) <= 0 ? true : false;
+        return (threshold.compareTo(MAX_THRESHOLD) == 0) ? (first.equalsIgnoreCase(second)) : (threshold.compareTo(StringUtils.getJaroWinklerDistance(first, second)) <= 0 ? true : false);
     }
 }
