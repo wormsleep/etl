@@ -486,8 +486,12 @@ public class CompareUtils {
         BufferedReader remainingReader = null;
         BufferedWriter remainingWriter = null;
 
-        try{
 
+
+        try{
+            if(dest.exists()) {
+                dest.delete();
+            }
             destWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dest, true), encoding), BUFFER_SIZE);
 
             // 复制源文件至比对剩余文件
@@ -508,8 +512,11 @@ public class CompareUtils {
                         KeyKeyBean kk = new KeyKeyBean(ll[0], ll[1], separator);
                         if (index > 0) {
                             // 若大于首个有效行，则判断是否已存在
-                            if (existsKeyKey(bag, kk)) {
-                                bag.add(kk);
+                            if (containsKeyKey(bag, kk)) {
+                                // 排除重复
+                                if(!existsKeyKey(bag, kk)) {
+                                    bag.add(kk);
+                                }
                             } else {
                                 // 若不存在，则将数据写入剩余文件
                                 if(index > 0) {
@@ -577,12 +584,32 @@ public class CompareUtils {
      * @param kk
      * @return
      */
-    private static boolean existsKeyKey(Bag bag, KeyKeyBean kk) {
+    private static boolean containsKeyKey(Bag bag, KeyKeyBean kk) {
         boolean result = false;
         Iterator iter = bag.iterator();
         while (iter.hasNext()) {
             KeyKeyBean bean = (KeyKeyBean)iter.next();
             if(bean.contains(kk)) {
+                result = true;
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 判断是为同组记录（根据 Key Key 判断）
+     * @param bag
+     * @param kk
+     * @return
+     */
+    private static boolean existsKeyKey(Bag bag, KeyKeyBean kk) {
+        boolean result = false;
+        Iterator iter = bag.iterator();
+        while (iter.hasNext()) {
+            KeyKeyBean bean = (KeyKeyBean)iter.next();
+            if(bean.equals(kk)) {
                 result = true;
                 break;
             }

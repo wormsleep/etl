@@ -35,6 +35,10 @@ public class KeyKeyBean {
         return (key1.equalsIgnoreCase(another.getKey1()) || key2.equalsIgnoreCase(another.getKey2())) ? true : false;
     }
 
+    public boolean equals(KeyKeyBean another) {
+        return (key1.equalsIgnoreCase(another.getKey1()) && key2.equalsIgnoreCase(another.getKey2())) ? true : false;
+    }
+
     @Override
     public String toString() {
         return key1+separator+key2;
