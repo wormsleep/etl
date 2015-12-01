@@ -3,6 +3,7 @@ package zw.wormsleep.tools.etl.compare;
 import org.apache.commons.collections.Bag;
 import org.apache.commons.collections.bag.HashBag;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import zw.wormsleep.tools.etl.utils.Uuid;
@@ -486,24 +487,24 @@ public class CompareUtils {
         BufferedReader remainingReader = null;
         BufferedWriter remainingWriter = null;
 
-
-
         try{
             if(dest.exists()) {
                 dest.delete();
             }
             destWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dest, true), encoding), BUFFER_SIZE);
 
+            String dir = FilenameUtils.getPath(src.getAbsolutePath());
+
             // 复制源文件至比对剩余文件
-            FileUtils.copyFile(src, new File("group-tmp1"));
+            FileUtils.copyFile(src, new File(dir+"group-tmp1"));
             // 遍历来源文件找到匹配的记录，分配组号并追加至输出文件
             Bag bag = new HashBag();
             String line = null;
             int operateIndex = 0;
             int groupedIndex = 0;
             while(true) {
-                remainingReader = new BufferedReader(new InputStreamReader(new FileInputStream((operateIndex % 2) == 0 ? new File("group-tmp1") : new File("group-tmp2")), encoding), BUFFER_SIZE);
-                remainingWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream((operateIndex % 2) == 0 ? new File("group-tmp2") : new File("group-tmp1")), encoding), BUFFER_SIZE);
+                remainingReader = new BufferedReader(new InputStreamReader(new FileInputStream((operateIndex % 2) == 0 ? new File(dir+"group-tmp1") : new File(dir+"group-tmp2")), encoding), BUFFER_SIZE);
+                remainingWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream((operateIndex % 2) == 0 ? new File(dir+"group-tmp2") : new File(dir+"group-tmp1")), encoding), BUFFER_SIZE);
                 operateIndex++;
                 int index = 0;
                 while((line = remainingReader.readLine()) != null) {

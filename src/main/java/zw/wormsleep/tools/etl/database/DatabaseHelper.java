@@ -471,7 +471,7 @@ public class DatabaseHelper {
 	 * 执行批量更新 SQL
 	 * 
 	 * @param conn
-	 * @param sql
+	 * @param sqls
 	 * @return
 	 */
 	public static int[] executeUpdate(Connection conn, List<String> sqls) {
@@ -773,8 +773,7 @@ public class DatabaseHelper {
 	/**
 	 * 打印数据库表元数据对象
 	 * @param database
-	 * @param schemaPattern
-	 * @param tableNamePattern
+	 * @param printer
 	 */
 	public static void printDatabaseMetadata(String database, DatabaseMetadataPrinter printer) {
 		Connection conn = null;
