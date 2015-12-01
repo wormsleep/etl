@@ -150,7 +150,7 @@ public class ETLUtils {
 
 		if (transformer == null && configuration.canRead()) {
 			transformer = new SimpleETLTransformer(new SimpleTransformConfig(
-					businessType));
+					businessType, configuration));
 		}
 
 		ETLLoader loader = new DatabaseLoader(loadConfig);

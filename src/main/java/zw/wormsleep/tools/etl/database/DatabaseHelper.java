@@ -1281,7 +1281,6 @@ public class DatabaseHelper {
 			}
 		}
 	}
-	
-	
-	
+
+
 }

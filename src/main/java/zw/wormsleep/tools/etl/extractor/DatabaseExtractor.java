@@ -31,6 +31,7 @@ public class DatabaseExtractor implements ETLExtractor {
 	private ResultSet rs;
 	private List<String> fields = new ArrayList<String>();
 	private int fetchSize;
+	private boolean columnNameToLowerCase;
 
 	public DatabaseExtractor(ExtractConfig extractConfig) {
 		this.extractConfig = extractConfig;
@@ -54,6 +55,7 @@ public class DatabaseExtractor implements ETLExtractor {
 
 		String table = extractConfig.getTable();
 		fetchSize =  extractConfig.getFetchSize();
+		columnNameToLowerCase = extractConfig.columnNameToLowerCase();
 
 		if (table != null && !table.equals("")) {
 			sql = "select * from " + table;
@@ -145,7 +147,11 @@ public class DatabaseExtractor implements ETLExtractor {
 
 			for (int i = 0; i < fieldCount; i++) {
 				try {
-					map.put(fields.get(i), rs.getObject(i + 1));
+					if(columnNameToLowerCase) {
+						map.put(fields.get(i).toLowerCase(), rs.getObject(i + 1));
+					} else {
+						map.put(fields.get(i), rs.getObject(i + 1));
+					}
 				} catch (SQLException e) {
 					logger.error("SQL 异常 !", e);
 				}

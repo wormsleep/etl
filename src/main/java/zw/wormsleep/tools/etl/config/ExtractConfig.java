@@ -23,4 +23,5 @@ public interface ExtractConfig {
 	String getSchemaPattern(); // 源数据库 schema 模式  ( 表对表批量传输使用 )
 	String getTablePattern(); // 源数据库 table 模式 ( 表对表批量传输使用 )
 	int getFetchSize(); // 源数据库 table 模式 ( 表对表批量传输使用 )
+	boolean columnNameToLowerCase(); // 源数据库表字段转小写
 }

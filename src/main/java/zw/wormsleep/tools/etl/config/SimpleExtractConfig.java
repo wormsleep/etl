@@ -32,7 +32,8 @@ public class SimpleExtractConfig implements ExtractConfig {
 	final String NODE_INPUT_SCHEMA_PATTERN = "input.schemapattern";
 	final String NODE_INPUT_TABLE_PATTERN = "input.tablepattern";
 	final String NODE_INPUT_FETCH_SIZE = "input.fetchsize";
-	
+	final String NODE_INPUT_COLUMN_NAME_TOLOWERCASE = "input.columnnametolowercase";
+
 	final String PROP_COLUMN_HEADER = "columns[@header]";
 	final String NODE_COLUMN = "columns.column";
 	final String NODE_INDEX = "index";
@@ -199,6 +200,11 @@ public class SimpleExtractConfig implements ExtractConfig {
 	@Override
 	public int getFetchSize() {
 		return business.getInt(NODE_INPUT_FETCH_SIZE, 0);
+	}
+
+	@Override
+	public boolean columnNameToLowerCase() {
+		return business.getBoolean(NODE_INPUT_COLUMN_NAME_TOLOWERCASE, false);
 	}
 
 }

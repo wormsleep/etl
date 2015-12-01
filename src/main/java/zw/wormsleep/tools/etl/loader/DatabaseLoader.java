@@ -123,7 +123,7 @@ public class DatabaseLoader implements ETLLoader {
 			while (iter.hasNext()) {
 				data = iter.next();
 				transformer.transform(data);
-				
+
 				// 特殊处理 - 向 Oracle 数据库传输数据时, 倍增其大写字段内容
 				Map<String, Object> convertedData = new HashMap<String, Object>();
 				if(dbType.equalsIgnoreCase("oracle")) {
@@ -134,13 +134,11 @@ public class DatabaseLoader implements ETLLoader {
 					convertedData = data;
 				}
 				
-//				logger.debug("@@@ 待导入数据 {}", data);
+				logger.debug("@@@ 待导入数据 {}", data);
 
-				// *************************************************
-				// logger.info("处理行号：{}", row + 1);
-				// *************************************************
 				lcnt++;
 				DatabaseHelper.fillParamters(pstmt, convertedData, params, types);
+
 				pstmt.addBatch();
 				if (lcnt % batchSize == 0) {
 					pstmt.executeBatch();

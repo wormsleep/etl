@@ -1,5 +1,6 @@
 package zw.wormsleep.tools.etl.transformer;
 
+import java.io.File;
 import java.util.Map;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -21,6 +22,11 @@ public class DecimalNullToZeroTransformer implements ETLTransformer {
 	
 	public DecimalNullToZeroTransformer(String businessType, String[] fieldname) throws ConfigurationException {
 		this._transformer = new SimpleETLTransformer(new SimpleTransformConfig(businessType));
+		this.fieldname = fieldname;
+	}
+
+	public DecimalNullToZeroTransformer(String businessType, String[] fieldname, File configuration) throws ConfigurationException {
+		this._transformer = new SimpleETLTransformer(new SimpleTransformConfig(businessType, configuration));
 		this.fieldname = fieldname;
 	}
 

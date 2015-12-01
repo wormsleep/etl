@@ -22,6 +22,56 @@ public class ConfigBuilderUtils {
 			.getLogger(ConfigBuilderUtils.class);
 
 	/**
+	 * 创建数据库表对表拷贝配置文件
+	 *
+	 * 1、支持目标表名自定
+	 * 2、支持目标表字段自定
+	 *
+	 */
+	public static void createTable2TableConfiguration(File file,
+														String srcDatabase, String srcDatabaseType, String destDatabase,
+														String destDatabaseType, String srcTableName, String select, String destTableName, ConfigurationNode columns, boolean srcTableColumnNameToLowerCase)
+			throws ConfigurationException {
+		XMLConfiguration config = new XMLConfiguration();
+		config.setRootElementName("etl");
+		ConfigurationNode root = config.getRootNode();
+
+		ConfigurationNode databaseNode = buildNode("database");
+		HierarchicalConfiguration srcDatabaseConfig = ConfigParserUtils
+				.getDatabaseHierarchicalConfiguration(srcDatabase);
+		HierarchicalConfiguration destDatabaseConfig = ConfigParserUtils
+				.getDatabaseHierarchicalConfiguration(destDatabase);
+
+		databaseNode.addChild(convertToConfigurationNode(srcDatabaseConfig));
+		databaseNode.addChild(convertToConfigurationNode(destDatabaseConfig));
+
+		ConfigurationNode resource = new Node("resource");
+		resource.addAttribute(buildAttributeNode("businesstype", srcTableName));
+
+		ConfigurationNode input = buildNode("input", "type", "database");
+		input.addChild(buildNode("database", srcDatabase, "type",
+				srcDatabaseType));
+		input.addChild(buildNode("sql", select));
+		input.addChild(buildNode("columnnametolowercase", srcTableColumnNameToLowerCase));
+
+		ConfigurationNode output = buildNode("output", "type", "database");
+		output.addChild(buildNode("database", destDatabase, "type",
+				destDatabaseType));
+		output.addChild(buildNode("table", destTableName));
+
+		resource.addChild(input);
+		resource.addChild(output);
+		resource.addChild(columns);
+
+		root.addChild(resource);
+
+		root.addChild(databaseNode);
+
+		config.save(file);
+	}
+
+
+	/**
 	 * 创建数据库表对表批量拷贝配置文件
 	 * 
 	 * @param file
@@ -238,7 +288,9 @@ public class ConfigBuilderUtils {
 	 * 
 	 */
 	public static class Assistant {
-		// 分析器定义
+		/**
+		 * 分析器定义
+		 */
 		public interface Analyst {
 			/**
 			 * 构造配置文件中的 columns 节点内容, 以便快速填写配置文件
@@ -248,7 +300,19 @@ public class ConfigBuilderUtils {
 			 */
 			public ConfigurationNode buildColumnsNode(int type);
 		}
-		
+
+		/**
+		 * 列名过滤器
+		 */
+		public interface FilterName {
+			/**
+			 * 过滤
+			 * @param name
+			 * @return
+			 */
+			public boolean accept(String name);
+		}
+
 		/**
 		 * SQL 类数据分析器 - 构造配置文件中的 columns 节点及子节点
 		 * 
@@ -264,48 +328,115 @@ public class ConfigBuilderUtils {
 				public ConfigurationNode buildColumnsNode(int type) {
 					ConfigurationNode columnsNode = buildNode("columns");
 					logger.debug("@@@ 组装 columns 节点配置 ...");
+					StringBuffer debugStr = new StringBuffer();
 					List<String> columns = DatabaseHelper.getTableColumnsName(database, tableName);
 					
 					ConfigurationNode columnNode = null;
 					ConfigurationNode fieldNode = null;
 					ConfigurationNode indexNode = null;
 					ConfigurationNode nameNode = null;
-					
-					logger.debug("<columns>");
+
+					debugStr.append("<columns>\n");
 					int columnCount = columns.size();
 					for(int i=0; i<columnCount; i++) {
 						String fieldName = columns.get(i);
 						fieldNode = buildNode("field", fieldName);
 						columnNode = buildNode("column");
-						logger.debug("\t<column>");
+						debugStr.append("\t<column>\n");
 						
 						// 根据 type 值判定生成内容
 						if(type == 1) {
 							indexNode = buildNode("index", i);
 							columnNode.addChild(indexNode);
-							logger.debug("\t\t<index>{}</index>", i);
+							debugStr.append("\t\t<index>"+i+"</index>\n");
 						} else if(type == 2) {
 							nameNode = buildNode("name", "ExcelColumnName");
 							columnNode.addChild(nameNode);
-							logger.debug("\t\t<name>{}</name>", "ExcelColumnName");
+							debugStr.append("\t\t<name>ExcelColumnName</name>\n");
 						}
 						
 						columnNode.addChild(fieldNode);
-						logger.debug("\t\t<field>{}</field>", fieldName);
+						debugStr.append("\t\t<field>"+fieldName+"</field>\n");
 						columnsNode.addChild(columnNode);
-						logger.debug("\t</column>");
+						debugStr.append("\t</column>\n");
 					}
 					
 					// 带列头的增加其 header 属性且值为 true
 					if(type == 2) {
 						columnsNode.addAttribute(buildAttributeNode("header", "true"));
 					}
-					
-					logger.debug("</columns>");
+
+					debugStr.append("</columns>");
+					logger.debug("@@@ 输出...\n{}", debugStr.toString());
 					return columnsNode;
 				}
 			};
 		}
+
+		/**
+		 * SQL 类数据分析器 - 构造配置文件中的 columns 节点及子节点
+		 *
+		 * @param database 数据库配置节点名称
+		 * @param tableName 表名
+		 * @return Analyst 接口实现对象
+		 */
+		public static Analyst getSQLAnalyst(final String database,
+											final String tableName, final FilterName filter) {
+			return new Analyst() {
+
+				@Override
+				public ConfigurationNode buildColumnsNode(int type) {
+					ConfigurationNode columnsNode = buildNode("columns");
+					logger.debug("@@@ 组装 columns 节点配置 ...");
+					StringBuffer debugStr = new StringBuffer();
+					List<String> columns = DatabaseHelper.getTableColumnsName(database, tableName);
+
+					ConfigurationNode columnNode = null;
+					ConfigurationNode fieldNode = null;
+					ConfigurationNode indexNode = null;
+					ConfigurationNode nameNode = null;
+
+					debugStr.append("<columns>\n");
+					int columnCount = columns.size();
+					for(int i=0; i<columnCount; i++) {
+						String fieldName = columns.get(i);
+
+						if(filter.accept(fieldName)) {
+
+							fieldNode = buildNode("field", fieldName);
+							columnNode = buildNode("column");
+							debugStr.append("\t<column>\n");
+
+							// 根据 type 值判定生成内容
+							if (type == 1) {
+								indexNode = buildNode("index", i);
+								columnNode.addChild(indexNode);
+								debugStr.append("\t\t<index>" + i + "</index>\n");
+							} else if (type == 2) {
+								nameNode = buildNode("name", "ExcelColumnName");
+								columnNode.addChild(nameNode);
+								debugStr.append("\t\t<name>ExcelColumnName</name>\n");
+							}
+
+							columnNode.addChild(fieldNode);
+							debugStr.append("\t\t<field>" + fieldName + "</field>\n");
+							columnsNode.addChild(columnNode);
+							debugStr.append("\t</column>\n");
+						}
+					}
+
+					// 带列头的增加其 header 属性且值为 true
+					if(type == 2) {
+						columnsNode.addAttribute(buildAttributeNode("header", "true"));
+					}
+
+					debugStr.append("</columns>");
+					logger.debug("@@@ 输出...\n{}", debugStr.toString());
+					return columnsNode;
+				}
+			};
+		}
+
 	}
 
 }
