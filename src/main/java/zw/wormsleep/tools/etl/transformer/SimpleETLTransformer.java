@@ -34,6 +34,8 @@ public class SimpleETLTransformer implements ETLTransformer {
 						row.put(key, mappingValue);
 					}
 				}
+			} else if(obj instanceof Formatter) {
+				row.put(key, ((Formatter) obj).format(row.get(key)));
 			} else {
 				row.put(key, obj);
 			}

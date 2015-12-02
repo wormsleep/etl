@@ -11,6 +11,9 @@ import java.util.UUID;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 
+import org.apache.commons.lang3.time.DateUtils;
+import zw.wormsleep.tools.etl.transformer.DateFormatter;
+import zw.wormsleep.tools.etl.transformer.Formatter;
 import zw.wormsleep.tools.etl.utils.ConfigParserUtils;
 
 public class SimpleTransformConfig implements TransformConfig {
@@ -31,6 +34,12 @@ public class SimpleTransformConfig implements TransformConfig {
 	final String TYPE_AUTO_GENERATE_UUID = "uuid";
 	final String TYPE_AUTO_GENERATE_DATE = "date";
 	final String TYPE_AUTO_GENERATE_DATETIME = "datatime";
+
+	public final String YYYY_MM_DD = "yyyy-MM-dd";
+	public final String YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss";
+	public final String[] PARSEPATTERNS = new String[] { "yyyy-MM",
+			"yyyyMM", "yyyy/MM", "yyyyMMdd", "yyyy-MM-dd", "yyyy/MM/dd",
+			"yyyyMMddHHmmss", "yyyy-MM-dd HH:mm:ss", "yyyy/MM/dd HH:mm:ss" };
 
 	private HierarchicalConfiguration business;
 
@@ -66,6 +75,8 @@ public class SimpleTransformConfig implements TransformConfig {
 				} else if (type.equalsIgnoreCase(TYPE_MAP)) { // 键-值对列
 					value = getMappingValue(ConfigParserUtils
 							.getConfigurationList(column, NODE_MAPPING_ITEM));
+				} else if(type.equalsIgnoreCase(TYPE_FORMAT)) {
+					value = getFormatter(column.getString(PROP_VALUE));
 				} else {
 					value = null;
 				}
@@ -111,5 +122,22 @@ public class SimpleTransformConfig implements TransformConfig {
 
 		return map;
 	}
+
+	private Formatter getFormatter(String type) {
+		Formatter formatter = null;
+
+		if(type.equalsIgnoreCase("date")) {
+			formatter = new DateFormatter();
+		}
+
+		return formatter != null ? formatter : new Formatter() {
+			@Override
+			public Object format(Object value) {
+				return value;
+			}
+		};
+	}
+
+
 
 }

@@ -134,7 +134,7 @@ public class DatabaseLoader implements ETLLoader {
 					convertedData = data;
 				}
 				
-				logger.debug("@@@ 待导入数据 {}", data);
+//				logger.debug("@@@ 待导入数据 {}", data);
 
 				lcnt++;
 				DatabaseHelper.fillParamters(pstmt, convertedData, params, types);
