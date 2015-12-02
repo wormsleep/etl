@@ -38,9 +38,7 @@ public class DateFormatter implements Formatter {
                 }
             }
         }
-        if(value != null) {
-            logger.debug("\n value type: {} - value: {} - result: {}", value.getClass().getName(), value, result);
-        }
+
         return result;
 
     }

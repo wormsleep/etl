@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -14,6 +15,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.lang3.time.DateUtils;
 import zw.wormsleep.tools.etl.transformer.DateFormatter;
 import zw.wormsleep.tools.etl.transformer.Formatter;
+import zw.wormsleep.tools.etl.transformer.NumberFormatter;
 import zw.wormsleep.tools.etl.utils.ConfigParserUtils;
 
 public class SimpleTransformConfig implements TransformConfig {
@@ -123,11 +125,33 @@ public class SimpleTransformConfig implements TransformConfig {
 		return map;
 	}
 
+	/**
+	 * 获取格式化器
+	 * @param type 配置文件节点 column 之 value 属性
+	 * @return
+	 */
 	private Formatter getFormatter(String type) {
 		Formatter formatter = null;
+		Pattern number = Pattern.compile("^[number|int].*");
 
-		if(type.equalsIgnoreCase("date")) {
+		if(type.equalsIgnoreCase("date") || type.equalsIgnoreCase("datetime")) {
 			formatter = new DateFormatter();
+		} else if(number.matcher(type).matches()) {
+			String[] nc = type.split("-");
+			String nt = nc[0];
+			if(nt.equalsIgnoreCase("number")) {
+
+				if(nc.length > 2) {
+					formatter = new NumberFormatter(nc[1], nc[2]);
+				} else if(nc.length > 1) {
+					formatter = new NumberFormatter(nc[1], "2");
+				} else {
+					formatter = new NumberFormatter(null, "2");
+				}
+
+			} else if(nt.equalsIgnoreCase("int")) {
+				formatter = new NumberFormatter(null, "0");
+			}
 		}
 
 		return formatter != null ? formatter : new Formatter() {
