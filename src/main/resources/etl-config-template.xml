@@ -12,6 +12,7 @@
 				]]>
 			</sql>
 			<fetchsize>10000 ( 默认: 10000 )</fetchsize>
+			<columnnametolowercase>true | false (字段名转小写，默认：false)</columnnametolowercase>
 		</input>
 		<!-- 数据源 - 文件 （text、data、excel（支持 xls 和 xlsx）、xml）-->
 		<input type="file">
@@ -103,7 +104,7 @@
 				</mapping>
 			</column>
 			<!-- 格式化转换列 （暂时通过自定义数据值列处理）-->
-			<column type="format" value="constant-value" check="false">
+			<column type="format" value="date | datetime | number-lenght-precision | int" check="false">
 				<name>constant-column-name</name>
 				<field>constant-field-name</field>
 			</column>

@@ -950,7 +950,8 @@ public class DatabaseHelper {
 			}
 		}
 	}
-	
+
+
 	/**
 	 * 获取表元数据描述对象集
 	 * @param rs 从 DatabaseMetaData 对象方法 getColumns(...) 中获取的元数据结果集
@@ -1001,6 +1002,61 @@ public class DatabaseHelper {
 		}
 		
 		return result;
+	}
+
+	/**
+	 * 获取表列元数据对象集
+	 * @param database 数据库节点名称
+	 * @param catalog 目录
+	 * @param tableName 表名
+	 * @return
+	 */
+	public static Map<String, Map<String, Object>> getColumnsMetadata(String database, String catalog, String tableName) {
+
+		Map<String, Map<String, Object>> columns = new LinkedHashMap<String, Map<String, Object>>();
+
+		Connection conn = null;
+		ResultSet rs = null;
+		try {
+			// 获取数据库 - 连接对象
+			conn = ConnectionPool.getConnection(database, ConfigParserUtils.getDatabaseConfiguration(database));
+			// 元数据对象
+			DatabaseMetaData srcDatabaseMetaData = conn.getMetaData();
+			// 获取源数据库 - 表元数据
+			rs = srcDatabaseMetaData.getColumns(catalog, null, tableName, null);
+			// 组装列元数据集对象
+			Object value = null;
+			String tname = null;
+			String columnName = null;
+			Map<String, Object> cs = null;
+			while (rs.next()) {
+				// 获取单行记录中的表名
+				tname = rs.getString(3);
+				if(tableName.equals(tname)) {
+					// 获取单行记录中的列名
+					columnName = rs.getString(4);
+					// 依据该列名新建列元数据描述对象集
+					cs = new HashMap<String, Object>();
+					// 依据元数据对象要素获取内容
+					for (String key : SQLTypeMetaData.getDefinition().keySet()) {
+						value = rs.getObject(SQLTypeMetaData.getDefinition().get(key));
+						cs.put(key, value);
+//					logger.debug("@@@ [key, value] {}, {}", key, value);
+					}
+					// 将列元数据对象集推入表对象集
+					columns.put(columnName, cs);
+				}
+			}
+		} catch (ConfigurationException e) {
+			logger.error("配置异常 !", e);
+		} catch (PropertyVetoException e) {
+			logger.error("属性异常 !", e);
+		} catch (SQLException e) {
+			logger.error("SQL 异常 !", e);
+		}
+
+
+		return columns;
 	}
 	
 	/**

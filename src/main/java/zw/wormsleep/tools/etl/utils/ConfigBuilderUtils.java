@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.sql.Types;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -376,8 +378,10 @@ public class ConfigBuilderUtils {
 		/**
 		 * SQL 类数据分析器 - 构造配置文件中的 columns 节点及子节点
 		 *
+		 *
 		 * @param database 数据库配置节点名称
 		 * @param tableName 表名
+		 * @param filter 列名过滤器
 		 * @return Analyst 接口实现对象
 		 */
 		public static Analyst getSQLAnalyst(final String database,
@@ -435,6 +439,173 @@ public class ConfigBuilderUtils {
 					return columnsNode;
 				}
 			};
+		}
+
+		/**
+		 * SQL 类数据分析器 - 构造配置文件中的 columns 节点及子节点
+		 * 根据数据库表列元数据
+		 * @param columns 表列元数据对象
+		 * @return
+		 */
+		public static Analyst getSQLAnalyst(final Map<String, Map<String, Object>> columns) {
+			return new Analyst() {
+
+				@Override
+				public ConfigurationNode buildColumnsNode(int type) {
+					ConfigurationNode columnsNode = buildNode("columns");
+					logger.debug("@@@ 组装 columns 节点配置 ...");
+					StringBuffer debugStr = new StringBuffer();
+
+					ConfigurationNode columnNode = null;
+					ConfigurationNode fieldNode = null;
+					ConfigurationNode indexNode = null;
+					ConfigurationNode nameNode = null;
+
+					debugStr.append("<columns>\n");
+					int columnCount = 0;
+					Map<String, Object> attributes;
+					for(String columnName : columns.keySet()) {
+						attributes = columns.get(columnName);
+						fieldNode = buildNode("field", columnName);
+						columnNode = buildNode("column");
+						addColumnNodeAttributes(columnNode, attributes, debugStr);
+
+						// 根据 type 值判定生成内容
+						if(type == 1) {
+							indexNode = buildNode("index", columnCount);
+							columnNode.addChild(indexNode);
+							debugStr.append("\t\t<index>"+columnCount+"</index>\n");
+						} else if(type == 2) {
+							nameNode = buildNode("name", "ExcelColumnName");
+							columnNode.addChild(nameNode);
+							debugStr.append("\t\t<name>ExcelColumnName</name>\n");
+						}
+
+						columnNode.addChild(fieldNode);
+						debugStr.append("\t\t<field>" + columnName + "</field>\n");
+						columnsNode.addChild(columnNode);
+						debugStr.append("\t</column>\n");
+
+						columnCount++;
+					}
+
+					// 带列头的增加其 header 属性且值为 true
+					if(type == 2) {
+						columnsNode.addAttribute(buildAttributeNode("header", "true"));
+					}
+
+					debugStr.append("</columns>");
+					logger.debug("@@@ 输出...\n{}", debugStr.toString());
+					return columnsNode;
+				}
+			};
+		}
+
+		/**
+		 * SQL 类数据分析器 - 构造配置文件中的 columns 节点及子节点
+		 *
+		 *
+		 * @param columns 表列元数据对象
+		 * @param filter 列名过滤器
+		 * @return
+		 */
+		public static Analyst getSQLAnalyst(final Map<String, Map<String, Object>> columns, final FilterName filter) {
+			return new Analyst() {
+
+				@Override
+				public ConfigurationNode buildColumnsNode(int type) {
+					ConfigurationNode columnsNode = buildNode("columns");
+					logger.debug("@@@ 组装 columns 节点配置 ...");
+					StringBuffer debugStr = new StringBuffer();
+
+					ConfigurationNode columnNode = null;
+					ConfigurationNode fieldNode = null;
+					ConfigurationNode indexNode = null;
+					ConfigurationNode nameNode = null;
+
+					debugStr.append("<columns>\n");
+					int columnCount = 0;
+					Map<String, Object> attributes;
+					for(String columnName : columns.keySet()) {
+
+						if(filter.accept(columnName)) {
+
+							attributes = columns.get(columnName);
+							fieldNode = buildNode("field", columnName);
+							columnNode = buildNode("column");
+							addColumnNodeAttributes(columnNode, attributes, debugStr);
+
+							// 根据 type 值判定生成内容
+							if (type == 1) {
+								indexNode = buildNode("index", columnCount);
+								columnNode.addChild(indexNode);
+								debugStr.append("\t\t<index>" + columnCount + "</index>\n");
+							} else if (type == 2) {
+								nameNode = buildNode("name", "ExcelColumnName");
+								columnNode.addChild(nameNode);
+								debugStr.append("\t\t<name>ExcelColumnName</name>\n");
+							}
+
+							columnNode.addChild(fieldNode);
+							debugStr.append("\t\t<field>" + columnName + "</field>\n");
+							columnsNode.addChild(columnNode);
+							debugStr.append("\t</column>\n");
+						}
+					}
+
+					// 带列头的增加其 header 属性且值为 true
+					if(type == 2) {
+						columnsNode.addAttribute(buildAttributeNode("header", "true"));
+					}
+
+					debugStr.append("</columns>");
+					logger.debug("@@@ 输出...\n{}", debugStr.toString());
+					return columnsNode;
+				}
+			};
+		}
+
+
+		/**
+		 * 增加 column 节点属性 - 依据数据库列元数据
+		 * @param node
+		 * @param attributes
+		 * @param debugStr
+		 */
+		private static void addColumnNodeAttributes(ConfigurationNode node, Map<String, Object> attributes, StringBuffer debugStr) {
+			Integer dataType = (Integer) attributes.get("DATA_TYPE");
+			Integer columnSize = (Integer) attributes.get("COLUMN_SIZE");
+			Integer decimalDigits = (Integer) attributes.get("DECIMAL_DIGITS");
+
+			switch (dataType) {
+				case Types.BIGINT:
+				case Types.INTEGER:
+				case Types.TINYINT:
+				case Types.SMALLINT:
+					node.addAttribute(buildAttributeNode("type", "format"));
+					node.addAttribute(buildAttributeNode("value", "int"));
+					debugStr.append("\t<column type=\"format\" value=\"int\">\n");
+					break;
+				case Types.DECIMAL:
+				case Types.DOUBLE:
+				case Types.FLOAT:
+				case Types.NUMERIC:
+				case Types.REAL:
+					node.addAttribute(buildAttributeNode("type", "format"));
+					node.addAttribute(buildAttributeNode("value", "number-" + columnSize + "-" + decimalDigits));
+					debugStr.append("\t<column type=\"format\" value=\"number-"+columnSize+"-"+decimalDigits+"\">\n");
+					break;
+				case Types.DATE:
+				case Types.TIME:
+				case Types.TIMESTAMP:
+					node.addAttribute(buildAttributeNode("type", "format"));
+					node.addAttribute(buildAttributeNode("value", "date"));
+					debugStr.append("\t<column type=\"format\" value=\"date\">\n");
+					break;
+				default:
+					debugStr.append("\t<column>\n");
+					break;
+			}
 		}
 
 	}
