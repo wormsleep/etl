@@ -106,12 +106,18 @@ public class ConfigParserUtils {
 			}
 		}
 
+		if(business != null) {
+			logger.info("@@@ 已获取 ETL 配置文件指定业务({})节点!", businessType);
+		} else {
+			logger.error("@@@ 未获取 ETL 配置文件指定业务({})节点!", businessType);
+		}
+
 		return business;
 	}
 	
 	/**
 	 * 获取指定数据库配置信息
-	 * @param businessType
+	 * @param database
 	 * @return
 	 * @throws ConfigurationException
 	 */
