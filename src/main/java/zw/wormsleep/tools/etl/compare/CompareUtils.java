@@ -275,6 +275,81 @@ public class CompareUtils {
     }
 
     /**
+     * 将文件按指定行数分割为多个文件。
+     *
+     * @param file 文件
+     * @param encoding 文件编码
+     * @param lines 每个文件的最大行数
+     * @return 分割的文件列表
+     */
+    public static List<File> splitFile(File file, String encoding, int lines) {
+        List<File> files = new ArrayList<File>();
+
+        String path = file.getAbsolutePath();
+        String fullPath = FilenameUtils.getFullPath(path);
+        String filename = FilenameUtils.getBaseName(path);
+        String extension = FilenameUtils.getExtension(path);
+
+        BufferedReader reader = null;
+        BufferedWriter writer = null;
+
+        File part = null;
+
+        try {
+            reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), encoding), BUFFER_SIZE);
+
+            int lineCount = 0;
+            int fileCount = 0;
+            String line = null;
+
+            part = new File(fullPath + filename + "-" + String.valueOf(++fileCount) + "." + extension);
+            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(part), encoding), BUFFER_SIZE);
+            files.add(part);
+
+            while ((line = reader.readLine()) != null) {
+                if (lineCount < lines) {
+                    if (lineCount++ > 0) {
+                        writer.newLine();
+                    }
+                    writer.write(line);
+                } else {
+                    writer.flush();
+
+                    part = new File(fullPath + filename + "-" + String.valueOf(++fileCount) + "." + extension);
+                    writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(part), encoding), BUFFER_SIZE);
+                    files.add(part);
+
+                    lineCount = 0;
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                    reader = null;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (writer != null) {
+                try {
+                    writer.flush();
+                    writer.close();
+                    writer = null;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return files;
+    }
+
+    /**
      * 合并多个文件
      * @param files
      * @param out
