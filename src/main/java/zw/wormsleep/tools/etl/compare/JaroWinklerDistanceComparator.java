@@ -19,4 +19,5 @@ public class JaroWinklerDistanceComparator implements SimilarityComparator {
     public boolean compare(String first, String second) {
         return (threshold.compareTo(MAX_THRESHOLD) == 0) ? (first.equalsIgnoreCase(second)) : (threshold.compareTo(StringUtils.getJaroWinklerDistance(first, second)) <= 0 ? true : false);
     }
+
 }

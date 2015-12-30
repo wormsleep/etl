@@ -6,12 +6,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import zw.wormsleep.tools.etl.utils.OperateSystemUtils;
 import zw.wormsleep.tools.etl.utils.Uuid;
 
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.security.Key;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -134,7 +134,7 @@ public class CompareUtils {
     }
 
     /**
-     * 相似度比较。
+     * 相似度比较 - 不分割文件（单线程）。
      * 通过逐行比较首文件和次文件内容并输出至已匹配文件。
      * 首文件和次文件每行内容格式为“关键字+分隔符+比对内容”
      * 输出文件每行内容格式为“首文件关键字+分隔符+次文件关键字”
@@ -279,24 +279,25 @@ public class CompareUtils {
     }
 
     /**
-     * 相似度比较。
+     * 相似度比较 - 次文件分割（多线程）。
      * 通过逐行比较首文件和次文件内容并输出至已匹配文件。
      * 首文件和次文件每行内容格式为“关键字+分隔符+比对内容”
      * 输出文件每行内容格式为“首文件关键字+分隔符+次文件关键字”
      *
-     * @param f          首文件
-     * @param fSeparator 首文件分隔符
-     * @param fEncoding  首文件编码
-     * @param s          次文件
-     * @param sSeparator 次文件分隔符
-     * @param sEncoding  次文件编码
-     * @param threshold  下限
-     * @param matched    匹配输出文件
-     * @param mSeparator 匹配输出文件分隔符
-     * @param mEncoding  匹配输出文件编码
-     * @param comparator 比较器
+     * @param f              首文件
+     * @param fSeparator     首文件分隔符
+     * @param fEncoding      首文件编码
+     * @param s              次文件
+     * @param sSeparator     次文件分隔符
+     * @param sEncoding      次文件编码
+     * @param threshold      下限
+     * @param matched        匹配输出文件
+     * @param mSeparator     匹配输出文件分隔符
+     * @param mEncoding      匹配输出文件编码
+     * @param comparator     比较器
+     * @param sSplitLineSize 分割行数/每文件
      */
-    public static void similarity(File f, String fSeparator, String fEncoding, File s, String sSeparator, String sEncoding, Double threshold, File matched, String mSeparator, String mEncoding, SimilarityComparator comparator, int splitLineSize) {
+    public static void similarity(File f, String fSeparator, String fEncoding, File s, String sSeparator, String sEncoding, Double threshold, File matched, String mSeparator, String mEncoding, SimilarityComparator comparator, int sSplitLineSize) {
         // 日志
         logger.info(
                 "@@@ 相似度比较开始...\n" +
@@ -309,6 +310,7 @@ public class CompareUtils {
                         "次文件 \n" +
                         "\t路径: {} \n" +
                         "\t分隔符: {} \t 编码: {} \n" +
+                        "\t分割行数：{}\n" +
                         "输出文件 \n" +
                         "\t路径: {} \n" +
                         "\t分隔符: {} \t 编码: {} \n" +
@@ -319,6 +321,7 @@ public class CompareUtils {
                 s.getAbsolutePath(),
                 sSeparator.equals("\t") ? "TAB" : sSeparator,
                 sEncoding,
+                sSplitLineSize,
                 matched.getAbsolutePath(),
                 mSeparator.equals("\t") ? "TAB" : mSeparator,
                 mEncoding,
@@ -327,7 +330,7 @@ public class CompareUtils {
 
         long startTime = System.currentTimeMillis();
 
-        List<File> sParts = splitFile(s, sEncoding, splitLineSize);
+        List<File> sParts = splitFile(s, sEncoding, sSplitLineSize);
         List<File> mParts = new ArrayList<File>();
         int sPartsCount = sParts.size();
         File sPart = null;
@@ -338,12 +341,114 @@ public class CompareUtils {
 
         ExecutorService pool = Executors.newCachedThreadPool();
         Thread thread = null;
-        for (int i=0; i<sPartsCount; i++) {
+        for (int i = 0; i < sPartsCount; i++) {
             sPart = sParts.get(i);
-            mPart = new File(mFullPath + mFilename + "-" + String.valueOf(i+1));
+            mPart = new File(mFullPath + mFilename + "-" + String.valueOf(i + 1));
             mParts.add(mPart);
-            thread = new SimilarityThread(f, fSeparator, fEncoding, sPart, sSeparator, sEncoding, threshold, mPart, mSeparator, mEncoding, comparator);
+            thread = new SimilarityIOThread(f, fSeparator, fEncoding, sPart, sSeparator, sEncoding, threshold, mPart, mSeparator, mEncoding, comparator);
             pool.execute(thread);
+        }
+
+        pool.shutdown();
+
+        while (true) {
+            if (pool.isTerminated()) {
+                logger.info("@@@ 相似度匹配（多线程）完成... 准备合并匹配结果文件。");
+                break;
+            }
+        }
+
+        mergeFiles(mParts, matched);
+
+        long endTime = System.currentTimeMillis();
+        long consuming = (endTime - startTime) / 1000;
+        logger.info("@@@ 相似度（多线程）比较耗时 : {} ", (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟");
+
+    }
+
+    /**
+     * 相似度比较 - 首文件和次文件分割（多线程）。
+     * 通过逐行比较首文件和次文件内容并输出至已匹配文件。
+     * 首文件和次文件每行内容格式为“关键字+分隔符+比对内容”
+     * 输出文件每行内容格式为“首文件关键字+分隔符+次文件关键字”
+     *
+     * @param f              首文件
+     * @param fSeparator     首文件分隔符
+     * @param fEncoding      首文件编码
+     * @param s              次文件
+     * @param sSeparator     次文件分隔符
+     * @param sEncoding      次文件编码
+     * @param threshold      下限
+     * @param matched        匹配输出文件
+     * @param mSeparator     匹配输出文件分隔符
+     * @param mEncoding      匹配输出文件编码
+     * @param comparator     比较器
+     * @param fSplitLineSize 首文件 分割行数/每文件
+     * @param sSplitLineSize 次文件 分割行数/每文件
+     */
+    public static void similarity(File f, String fSeparator, String fEncoding, File s, String sSeparator, String sEncoding, Double threshold, File matched, String mSeparator, String mEncoding, SimilarityComparator comparator, int fSplitLineSize, int sSplitLineSize) {
+        // 日志
+        logger.info(
+                "@@@ 相似度比较开始...\n" +
+                        "**********\n" +
+                        "比对环境信息\n" +
+                        "**********\n" +
+                        "首文件 \n" +
+                        "\t路径: {} \n" +
+                        "\t分隔符: {} \t 编码: {} \n" +
+                        "\t分割行数：{}\n" +
+                        "次文件 \n" +
+                        "\t路径: {} \n" +
+                        "\t分隔符: {} \t 编码: {} \n" +
+                        "\t分割行数：{}\n" +
+                        "输出文件 \n" +
+                        "\t路径: {} \n" +
+                        "\t分隔符: {} \t 编码: {} \n" +
+                        "相似度评分基准值: {} \n",
+                f.getAbsolutePath(),
+                fSeparator.equals("\t") ? "TAB" : fSeparator,
+                fEncoding,
+                fSplitLineSize,
+                s.getAbsolutePath(),
+                sSeparator.equals("\t") ? "TAB" : sSeparator,
+                sEncoding,
+                fSplitLineSize,
+                matched.getAbsolutePath(),
+                mSeparator.equals("\t") ? "TAB" : mSeparator,
+                mEncoding,
+                threshold
+        );
+
+        long startTime = System.currentTimeMillis();
+
+        List<File> fParts = splitFile(f, fEncoding, fSplitLineSize);
+        List<File> sParts = splitFile(s, sEncoding, sSplitLineSize);
+        List<File> mParts = new ArrayList<File>();
+        int fPartsCount = fParts.size();
+        int sPartsCount = sParts.size();
+        File fPart = null;
+        File sPart = null;
+        File mPart = null;
+        String path = matched.getAbsolutePath();
+        String mFullPath = FilenameUtils.getFullPath(path);
+        String mFilename = FilenameUtils.getBaseName(path);
+
+        ExecutorService pool = getThreadPool(fPartsCount, sPartsCount);
+
+        for (int fi = 0; fi < fPartsCount; fi++) {
+
+            fPart = fParts.get(fi);
+
+            for (int si = 0; si < sPartsCount; si++) {
+
+                sPart = sParts.get(si);
+
+                mPart = new File(mFullPath + mFilename + "-" + String.valueOf(fi + 1) + "-" + String.valueOf(si + 1));
+                mParts.add(mPart);
+
+                pool.execute(new SimilarityMemoryThread(fPart, fSeparator, fEncoding, sPart, sSeparator, sEncoding, threshold, mPart, mSeparator, mEncoding, comparator));
+
+            }
         }
 
         pool.shutdown();
@@ -824,6 +929,11 @@ public class CompareUtils {
             index++;
         }
         logger.debug("组号: {}, 共 {} 条记录", uuid, index);
+    }
+
+    // 根据操作系统 CPU 数量和比对文件数量乘积判定生成的线程池（类型）
+    private static ExecutorService getThreadPool(int fSize, int sSize) {
+        return (Runtime.getRuntime().availableProcessors() * 10 > fSize * sSize) ? Executors.newCachedThreadPool() : Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 10);
     }
 
 }
