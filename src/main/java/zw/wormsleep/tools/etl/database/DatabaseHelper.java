@@ -1158,7 +1158,7 @@ public class DatabaseHelper {
 			
 			ResultSetMetaData rsmd = rs.getMetaData();
 			int columnCount = rsmd.getColumnCount();
-			for(int i=1; i<columnCount; i++) {
+			for(int i=1; i<columnCount+1; i++) {
 				columns.add(rsmd.getColumnLabel(i));
 			}
 			

@@ -35,7 +35,8 @@ public class SimilarityMemoryThread extends Thread {
         this.fSeparator = fSeparator != null ? fSeparator : DEFAULT_SEPARATOR;
         this.fEncoding = fEncoding != null ? fEncoding : DEFAULT_ENCODING;
         this.s = s;
-        this.sSeparator = sSeparator != null ? sSeparator : DEFAULT_SEPARATOR;;
+        this.sSeparator = sSeparator != null ? sSeparator : DEFAULT_SEPARATOR;
+        ;
         this.sEncoding = sEncoding != null ? sEncoding : DEFAULT_ENCODING;
         this.threshold = threshold != null ? threshold : new Double("1.0");
         this.matched = matched;
@@ -85,7 +86,7 @@ public class SimilarityMemoryThread extends Thread {
 
             long endTime = System.currentTimeMillis();
             long consuming = (endTime - startTime) / 1000;
-            logger.info("线程：{} 耗时 : {} ", threadName, (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟");
+            logger.info("线程：{} 耗时 : {} ", threadName, (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟 " + (consuming % 60) + " 秒") : "小于 1 分钟");
 
         } catch (IOException e) {
             logger.error("IO 异常", e);

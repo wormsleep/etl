@@ -6,7 +6,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import zw.wormsleep.tools.etl.utils.OperateSystemUtils;
 import zw.wormsleep.tools.etl.utils.Uuid;
 
 import java.io.*;
@@ -23,6 +22,7 @@ public class CompareUtils {
     private static Logger logger = LoggerFactory.getLogger(CompareUtils.class);
 
     private static final int BUFFER_SIZE = 20 * 1024 * 1024;
+    private static final int SPLIT_LINE_SIZE = 5000;
 
     /**
      * 相似度比较。
@@ -38,7 +38,7 @@ public class CompareUtils {
      * @param matched   匹配输出文件
      */
     public static void similarity(File f, File s, Double threshold, File matched) {
-        similarity(f, null, null, s, null, null, threshold, matched, null, null, null);
+        similarity(f, null, null, s, null, null, threshold, matched, null, null, null, SPLIT_LINE_SIZE, SPLIT_LINE_SIZE);
     }
 
     /**
@@ -56,7 +56,7 @@ public class CompareUtils {
      * @param comparator 比较器
      */
     public static void similarity(File f, File s, Double threshold, File matched, SimilarityComparator comparator) {
-        similarity(f, null, null, s, null, null, threshold, matched, null, null, comparator);
+        similarity(f, null, null, s, null, null, threshold, matched, null, null, comparator, SPLIT_LINE_SIZE, SPLIT_LINE_SIZE);
     }
 
     /**
@@ -74,7 +74,7 @@ public class CompareUtils {
      * @param separator 分隔符（首文件、次文件、输出文件一致）
      */
     public static void similarity(File f, File s, Double threshold, File matched, String separator) {
-        similarity(f, separator, null, s, separator, null, threshold, matched, separator, null, null);
+        similarity(f, separator, null, s, separator, null, threshold, matched, separator, null, null, SPLIT_LINE_SIZE, SPLIT_LINE_SIZE);
     }
 
     /**
@@ -93,7 +93,7 @@ public class CompareUtils {
      * @param comparator 比较器
      */
     public static void similarity(File f, File s, Double threshold, File matched, String separator, SimilarityComparator comparator) {
-        similarity(f, separator, null, s, separator, null, threshold, matched, separator, null, comparator);
+        similarity(f, separator, null, s, separator, null, threshold, matched, separator, null, comparator, SPLIT_LINE_SIZE, SPLIT_LINE_SIZE);
     }
 
     /**
@@ -112,7 +112,7 @@ public class CompareUtils {
      * @param encoding  文件编码（首文件、次文件、输出文件一致）
      */
     public static void similarity(File f, File s, Double threshold, File matched, String separator, String encoding) {
-        similarity(f, separator, encoding, s, separator, encoding, threshold, matched, separator, encoding, null);
+        similarity(f, separator, encoding, s, separator, encoding, threshold, matched, separator, encoding, null, SPLIT_LINE_SIZE, SPLIT_LINE_SIZE);
     }
 
     /**
@@ -130,7 +130,7 @@ public class CompareUtils {
      * @param comparator 比较器
      */
     public static void similarity(File f, File s, Double threshold, File matched, String separator, String encoding, SimilarityComparator comparator) {
-        similarity(f, separator, encoding, s, separator, encoding, threshold, matched, separator, encoding, comparator);
+        similarity(f, separator, encoding, s, separator, encoding, threshold, matched, separator, encoding, comparator, SPLIT_LINE_SIZE, SPLIT_LINE_SIZE);
     }
 
     /**
