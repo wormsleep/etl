@@ -22,4 +22,5 @@ public interface LoadConfig {
 	boolean getTransmitData(); // 是否传输数据至目标数据库表 ( 表对表批量传输使用 )
 	int getThreadCount(); // 线程数  ( 表对表批量传输使用 )
 	int getBatchSize(); // 批量处理数  ( 数据库 )
+	boolean truncateTableBeforeLoad(); // 导入数据库前是否先清除表数据
 }

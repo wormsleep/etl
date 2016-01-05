@@ -56,6 +56,7 @@ public class DatabaseLoader implements ETLLoader {
 		} else { // 对于已定义导入列情况
 			selectSQL = DatabaseHelper.getSelectSQL(table, fields);
 		}
+		boolean truncateTableBeforeLoad = loadConfig.truncateTableBeforeLoad();
 		
 		logger.info("@@@ Select SQL: {}", selectSQL);
 
@@ -65,7 +66,7 @@ public class DatabaseLoader implements ETLLoader {
 			// 关闭自动提交
 			conn.setAutoCommit(false);
 			// *** 若进行表对表拷贝, 则首先清除目标表
-			if(isTable2Table) {
+			if(isTable2Table || truncateTableBeforeLoad) {
 				DatabaseHelper.executeUpdate(conn, "truncate table " + table);
 				logger.info("@@@ truncate table {}", table);
 			}
