@@ -84,6 +84,10 @@ public class GExcelLoader implements ETLLoader {
 		Map<String, Object> row = null;
 		while (iter.hasNext()) {
 			row = iter.next();
+			// 优化数据正确性
+			if(row.size() < 1) {
+				continue;
+			}
 			// 转换抽取数据
 			transformer.transform(row);
 			data.add(row);

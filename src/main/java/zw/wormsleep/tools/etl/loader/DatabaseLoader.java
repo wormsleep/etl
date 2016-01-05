@@ -123,6 +123,11 @@ public class DatabaseLoader implements ETLLoader {
 			
 			while (iter.hasNext()) {
 				data = iter.next();
+				// 优化数据正确性
+				if(data.size() < 1) {
+					continue;
+				}
+				// 数据转换
 				transformer.transform(data);
 
 				// 特殊处理 - 向 Oracle 数据库传输数据时, 倍增其大写字段内容

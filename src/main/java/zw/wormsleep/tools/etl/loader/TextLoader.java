@@ -59,6 +59,10 @@ public class TextLoader implements ETLLoader {
 			int index = 0;
 			while (iter.hasNext()) {
 				row = iter.next();
+				// 优化数据正确性
+				if(row.size() < 1) {
+					continue;
+				}
 
 				for (String field : fields.keySet()) {
 					line.add(row.get(field));

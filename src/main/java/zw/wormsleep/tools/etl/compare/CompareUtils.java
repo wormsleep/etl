@@ -24,7 +24,7 @@ public class CompareUtils {
     private static final int BUFFER_SIZE = 10 * 1024 * 1024;
     private static final int SPLIT_LINE_SIZE = 5000;
     private final static String SEPARATOR = "!@#";
-    private final static String ENCODING = "!@#";
+    private final static String ENCODING = "UTF-8";
 
     /**
      * 相似度比较。
