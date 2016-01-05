@@ -21,7 +21,7 @@ import java.util.concurrent.Executors;
 public class CompareUtils {
     private static Logger logger = LoggerFactory.getLogger(CompareUtils.class);
 
-    private static final int BUFFER_SIZE = 20 * 1024 * 1024;
+    private static final int BUFFER_SIZE = 10 * 1024 * 1024;
     private static final int SPLIT_LINE_SIZE = 5000;
 
     /**
