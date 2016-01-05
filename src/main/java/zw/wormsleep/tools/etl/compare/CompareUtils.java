@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
  * Created by wormsleep on 2015/11/25.
  */
 public class CompareUtils {
-    private static Logger logger = LoggerFactory.getLogger(CompareUtils.class);
+    final static Logger logger = LoggerFactory.getLogger(CompareUtils.class);
 
     private static final int BUFFER_SIZE = 10 * 1024 * 1024;
     private static final int SPLIT_LINE_SIZE = 5000;
