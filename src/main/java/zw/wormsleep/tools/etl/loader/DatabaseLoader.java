@@ -163,7 +163,7 @@ public class DatabaseLoader implements ETLLoader {
 			long endTime = System.currentTimeMillis();
 			long consuming = (endTime - startTime) / 1000;
 			logger.info("耗时 : {} ", (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : (consuming>0 ? consuming + " 秒" : String.valueOf(endTime - startTime) + " 毫秒"));
-			logger.info("平均 : {} ", consuming > 0 ? ((((lcnt * 60) / (consuming * 10000)) > 0) ? String.valueOf((lcnt * 60) / (consuming * 10000)) + " 万条/分钟" : String.valueOf(lcnt / consuming) + " 条/秒") : (String.valueOf(lcnt / (endTime - startTime)) + " 条/毫秒"));
+			logger.info("平均 : {} ", consuming > 0 ? ((((lcnt * 60) / (consuming * 10000)) > 0) ? String.valueOf((lcnt * 60) / (consuming * 10000)) + " 万条/分钟" : String.valueOf(lcnt / consuming) + " 条/秒") : ((lcnt - (endTime - startTime) > 0 ? String.valueOf(lcnt / (endTime - startTime)) : "小于 1") + " 条/毫秒"));
 		} catch (SQLException e) {
 			logger.error("SQL 异常 !", e);
 		} catch (PropertyVetoException e) {
