@@ -29,7 +29,7 @@ public class ConfigParserUtils {
 	 */
 	public static File getDefaultConfigurationFile() {
 		String path = ConfigParserUtils.class.getClassLoader().getResource(DEFAULT_CONFIG_FILENAME).getPath();
-		logger.info("@@@ load default configuration file: {}", path);
+		logger.debug("@@@ load default configuration file: {}", path);
 		return new File(path);
 	}
 
@@ -107,7 +107,7 @@ public class ConfigParserUtils {
 		}
 
 		if(business != null) {
-			logger.info("@@@ 已获取 ETL 配置文件指定业务({})节点!", businessType);
+			logger.debug("@@@ 已获取 ETL 配置文件指定业务({})节点!", businessType);
 		} else {
 			logger.error("@@@ 未获取 ETL 配置文件指定业务({})节点!", businessType);
 		}
