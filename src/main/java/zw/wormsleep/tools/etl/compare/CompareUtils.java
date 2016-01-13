@@ -25,6 +25,7 @@ public class CompareUtils {
     private static final int SPLIT_LINE_SIZE = 5000;
     private final static String SEPARATOR = "!@#";
     private final static String ENCODING = "UTF-8";
+    private final static int LIMITED_LENGTH_SCOPE = 4;
 
     /**
      * 相似度比较。
@@ -40,7 +41,7 @@ public class CompareUtils {
      * @param matched   匹配输出文件
      */
     public static void similarity(File f, File s, Double threshold, File matched) {
-        similarity(f, SEPARATOR, ENCODING, s, SEPARATOR, ENCODING, threshold, matched, SEPARATOR, ENCODING, new JaroWinklerDistanceComparator(threshold), SPLIT_LINE_SIZE, SPLIT_LINE_SIZE);
+        similarity(f, SEPARATOR, ENCODING, s, SEPARATOR, ENCODING, threshold, matched, SEPARATOR, ENCODING, new JaroWinklerDistanceComparator(threshold), SPLIT_LINE_SIZE, SPLIT_LINE_SIZE, LIMITED_LENGTH_SCOPE);
     }
 
     /**
@@ -58,7 +59,7 @@ public class CompareUtils {
      * @param comparator 比较器
      */
     public static void similarity(File f, File s, Double threshold, File matched, SimilarityComparator comparator) {
-        similarity(f, SEPARATOR, ENCODING, s, SEPARATOR, ENCODING, threshold, matched, SEPARATOR, ENCODING, comparator, SPLIT_LINE_SIZE, SPLIT_LINE_SIZE);
+        similarity(f, SEPARATOR, ENCODING, s, SEPARATOR, ENCODING, threshold, matched, SEPARATOR, ENCODING, comparator, SPLIT_LINE_SIZE, SPLIT_LINE_SIZE, LIMITED_LENGTH_SCOPE);
     }
 
     /**
@@ -77,7 +78,7 @@ public class CompareUtils {
      * @param encoding  文件编码（首文件、次文件、输出文件一致）
      */
     public static void similarity(File f, File s, Double threshold, File matched, String separator, String encoding, SimilarityComparator comparator) {
-        similarity(f, separator, encoding, s, separator, encoding, threshold, matched, separator, encoding, comparator, SPLIT_LINE_SIZE, SPLIT_LINE_SIZE);
+        similarity(f, separator, encoding, s, separator, encoding, threshold, matched, separator, encoding, comparator, SPLIT_LINE_SIZE, SPLIT_LINE_SIZE, LIMITED_LENGTH_SCOPE);
     }
 
     /**
@@ -308,6 +309,115 @@ public class CompareUtils {
                 mParts.add(mPart);
 
                 pool.execute(new SimilarityMemoryThread(fPart, fSeparator, fEncoding, sPart, sSeparator, sEncoding, threshold, mPart, mSeparator, mEncoding, comparator));
+
+            }
+        }
+
+        pool.shutdown();
+
+        while (true) {
+            if (pool.isTerminated()) {
+                logger.info("@@@ 相似度匹配（多线程）完成... 准备合并匹配结果文件。");
+                break;
+            }
+        }
+
+        mergeFiles(mParts, matched);
+
+        long endTime = System.currentTimeMillis();
+        long consuming = (endTime - startTime) / 1000;
+        logger.info("@@@ 相似度（多线程）比较耗时 : {} ", (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟");
+
+    }
+
+    /**
+     * 相似度比较 - 首文件和次文件分割（多线程）。
+     * 通过逐行比较首文件和次文件内容并输出至已匹配文件。
+     * 首文件和次文件每行内容格式为“关键字+分隔符+比对内容”
+     * 输出文件每行内容格式为“首文件关键字+分隔符+次文件关键字”
+     *
+     * @param f                            首文件
+     * @param fSeparator                   首文件分隔符
+     * @param fEncoding                    首文件编码
+     * @param s                            次文件
+     * @param sSeparator                   次文件分隔符
+     * @param sEncoding                    次文件编码
+     * @param threshold                    下限
+     * @param matched                      匹配输出文件
+     * @param mSeparator                   匹配输出文件分隔符
+     * @param mEncoding                    匹配输出文件编码
+     * @param comparator                   比较器
+     * @param fSplitLineSize               首文件 分割行数/每文件
+     * @param sSplitLineSize               次文件 分割行数/每文件
+     * @param similarityLimitedLengthScope 相似度比对受限长度范围
+     */
+    public static void similarity(File f, String fSeparator, String fEncoding, File s,
+                                  String sSeparator, String sEncoding,
+                                  Double threshold, File matched, String mSeparator, String mEncoding,
+                                  SimilarityComparator comparator, int fSplitLineSize, int sSplitLineSize,
+                                  int similarityLimitedLengthScope) {
+        // 日志
+        logger.info(
+                "@@@ 相似度比较开始...\n" +
+                        "***********\n" +
+                        "比对环境信息\n" +
+                        "***********\n" +
+                        "首文件 \n" +
+                        "\t路径: {} \n" +
+                        "\t分隔符: {} \t 编码: {} \n" +
+                        "\t分割行数：{}\n" +
+                        "次文件 \n" +
+                        "\t路径: {} \n" +
+                        "\t分隔符: {} \t 编码: {} \n" +
+                        "\t分割行数：{}\n" +
+                        "输出文件 \n" +
+                        "\t路径: {} \n" +
+                        "\t分隔符: {} \t 编码: {} \n" +
+                        "相似度评分基准值: {} \n" +
+                        "相似度比较器：{} \n",
+                f.getAbsolutePath(),
+                fSeparator.equals("\t") ? "TAB" : fSeparator,
+                fEncoding,
+                fSplitLineSize,
+                s.getAbsolutePath(),
+                sSeparator.equals("\t") ? "TAB" : sSeparator,
+                sEncoding,
+                fSplitLineSize,
+                matched.getAbsolutePath(),
+                mSeparator.equals("\t") ? "TAB" : mSeparator,
+                mEncoding,
+                threshold,
+                comparator.getClass().getSimpleName()
+        );
+
+        long startTime = System.currentTimeMillis();
+
+        List<File> fParts = splitFile(f, fEncoding, fSplitLineSize);
+        List<File> sParts = splitFile(s, sEncoding, sSplitLineSize);
+        List<File> mParts = new ArrayList<File>();
+        int fPartsCount = fParts.size();
+        int sPartsCount = sParts.size();
+        File fPart = null;
+        File sPart = null;
+        File mPart = null;
+        String path = matched.getAbsolutePath();
+        String mFullPath = FilenameUtils.getFullPath(path);
+        String mFilename = FilenameUtils.getBaseName(path);
+
+        ExecutorService pool = getThreadPool(fPartsCount, sPartsCount);
+
+        for (int fi = 0; fi < fPartsCount; fi++) {
+
+            fPart = fParts.get(fi);
+
+            for (int si = 0; si < sPartsCount; si++) {
+
+                sPart = sParts.get(si);
+
+                mPart = new File(mFullPath + mFilename + "-" + String.valueOf(fi + 1) + "-" + String.valueOf(si + 1));
+                mParts.add(mPart);
+
+                pool.execute(new SimilarityMemoryLimitedScopeThread(fPart, fSeparator, fEncoding, sPart, sSeparator, sEncoding, threshold, mPart, mSeparator, mEncoding, comparator, similarityLimitedLengthScope));
 
             }
         }
@@ -655,7 +765,7 @@ public class CompareUtils {
                 while ((line = remainingReader.readLine()) != null) {
                     String[] ll = line.split(separator);
                     if (ll.length > 1) {
-                        KeyKeyBean kk = new KeyKeyBean(ll[0], ll[1], separator);
+                        KeyKey kk = new KeyKey(ll[0], ll[1], separator);
                         if (index > 0) {
                             // 若大于首个有效行，则判断是否已存在
                             if (containsKeyKey(bag, kk)) {
@@ -724,6 +834,7 @@ public class CompareUtils {
         }
     }
 
+
     /**
      * 判断是为同组记录（根据 Key Key 判断）
      *
@@ -731,11 +842,11 @@ public class CompareUtils {
      * @param kk
      * @return
      */
-    private static boolean containsKeyKey(Bag bag, KeyKeyBean kk) {
+    private static boolean containsKeyKey(Bag bag, KeyKey kk) {
         boolean result = false;
         Iterator iter = bag.iterator();
         while (iter.hasNext()) {
-            KeyKeyBean bean = (KeyKeyBean) iter.next();
+            KeyKey bean = (KeyKey) iter.next();
             if (bean.contains(kk)) {
                 result = true;
                 break;
@@ -752,11 +863,11 @@ public class CompareUtils {
      * @param kk
      * @return
      */
-    private static boolean existsKeyKey(Bag bag, KeyKeyBean kk) {
+    private static boolean existsKeyKey(Bag bag, KeyKey kk) {
         boolean result = false;
         Iterator iter = bag.iterator();
         while (iter.hasNext()) {
-            KeyKeyBean bean = (KeyKeyBean) iter.next();
+            KeyKey bean = (KeyKey) iter.next();
             if (bean.equals(kk)) {
                 result = true;
                 break;
@@ -782,7 +893,7 @@ public class CompareUtils {
         String gx = count > 1 ? "n" : "1";
         int index = 0;
         while (iter.hasNext()) {
-            KeyKeyBean bean = (KeyKeyBean) iter.next();
+            KeyKey bean = (KeyKey) iter.next();
             if (!isFirstGroup || index > 0) {
                 writer.newLine();
             }

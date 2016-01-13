@@ -36,7 +36,7 @@ public class SimilarityMemoryThread extends Thread {
         this.fEncoding = fEncoding != null ? fEncoding : DEFAULT_ENCODING;
         this.s = s;
         this.sSeparator = sSeparator != null ? sSeparator : DEFAULT_SEPARATOR;
-        ;
+
         this.sEncoding = sEncoding != null ? sEncoding : DEFAULT_ENCODING;
         this.threshold = threshold != null ? threshold : new Double("1.0");
         this.matched = matched;

@@ -17,6 +17,10 @@ public class JaroWinklerDistanceComparator implements SimilarityComparator {
 
     @Override
     public boolean compare(String first, String second) {
+        return (threshold.compareTo(MAX_THRESHOLD) == 0) ? (first.equals(second)) : (threshold.compareTo(StringUtils.getJaroWinklerDistance(first, second)) <= 0 ? true : false);
+    }
+
+    public boolean compareSpecial(String first, String second) {
         if(threshold.compareTo(MAX_THRESHOLD) == 0 || (first.length() < 5 && second.length() < 5) ) {
             return first.equalsIgnoreCase(second);
         } else {
@@ -26,10 +30,6 @@ public class JaroWinklerDistanceComparator implements SimilarityComparator {
                 return threshold.compareTo(StringUtils.getJaroWinklerDistance(first, second)) <= 0 ? true : false;
             }
         }
-    }
-
-    public boolean compareOrigin(String first, String second) {
-        return (threshold.compareTo(MAX_THRESHOLD) == 0) ? (first.equalsIgnoreCase(second)) : (threshold.compareTo(StringUtils.getJaroWinklerDistance(first, second)) <= 0 ? true : false);
     }
 
 }
