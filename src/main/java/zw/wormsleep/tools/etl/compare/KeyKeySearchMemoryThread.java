@@ -11,8 +11,6 @@ import java.util.Comparator;
  * Created by wormsleep on 2016/1/15.
  */
 public class KeyKeySearchMemoryThread extends Thread {
-    final Logger logger = LoggerFactory.getLogger(KeyKeySearchMemoryThread.class);
-
     private Collection foundKeyKeys;
     private KeyKey[] sortedKeys;
     private KeyKey key;
@@ -29,7 +27,6 @@ public class KeyKeySearchMemoryThread extends Thread {
     @Override
     public void run() {
         String threadName = Thread.currentThread().getName();
-//        logger.info("@@@ 分组检索子线程 {} 开启...", threadName);
 
         int position = Arrays.binarySearch(sortedKeys, key, comparator);
         // 若找到了再向左找和向右找
