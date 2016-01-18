@@ -1,12 +1,8 @@
 package zw.wormsleep.tools.etl.compare;
 
-import org.apache.commons.collections.Bag;
-import org.apache.commons.collections.bag.HashBag;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import zw.wormsleep.tools.etl.utils.Uuid;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -177,7 +173,7 @@ public class CompareUtils {
                             if (comparator.compare(first, second)) {
                                 fKey = fls[0];
                                 sKey = sls[0];
-                                logger.info("@@@ 匹配 - {}\n匹配关键字\t{} - {}\n内容 1：{}\n内容 2：{}", matchedCount, fKey, sKey, first, second);
+                                logger.debug("@@@ 匹配 - {}\n匹配关键字\t{} - {}\n内容 1：{}\n内容 2：{}", matchedCount, fKey, sKey, first, second);
                                 if (matchedCount++ > 0) {
                                     mWriter.newLine();
                                 }
@@ -295,7 +291,7 @@ public class CompareUtils {
         String mFullPath = FilenameUtils.getFullPath(path);
         String mFilename = FilenameUtils.getBaseName(path);
 
-        ExecutorService pool = getThreadPool(fPartsCount, sPartsCount);
+        ExecutorService pool = smartThreadPool(fPartsCount, sPartsCount);
 
         for (int fi = 0; fi < fPartsCount; fi++) {
 
@@ -326,7 +322,7 @@ public class CompareUtils {
 
         long endTime = System.currentTimeMillis();
         long consuming = (endTime - startTime) / 1000;
-        logger.info("@@@ 相似度（多线程）比较耗时 : {} ", (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟");
+        logger.info("@@@ 相似度（多线程）比较耗时 : {} ", (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟 (约为 "+String.valueOf(consuming % 60)+" 秒)");
 
     }
 
@@ -404,7 +400,7 @@ public class CompareUtils {
         String mFullPath = FilenameUtils.getFullPath(path);
         String mFilename = FilenameUtils.getBaseName(path);
 
-        ExecutorService pool = getThreadPool(fPartsCount, sPartsCount);
+        ExecutorService pool = smartThreadPool(fPartsCount, sPartsCount);
 
         for (int fi = 0; fi < fPartsCount; fi++) {
 
@@ -429,13 +425,19 @@ public class CompareUtils {
                 logger.info("@@@ 相似度匹配（多线程）完成... 准备合并匹配结果文件。");
                 break;
             }
+            // 每隔一段时间判断线程是否完成
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         mergeFiles(mParts, matched);
 
         long endTime = System.currentTimeMillis();
         long consuming = (endTime - startTime) / 1000;
-        logger.info("@@@ 相似度（多线程）比较耗时 : {} ", (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟");
+        logger.info("@@@ 相似度（多线程）比较耗时 : {} ", (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟 (约为 "+String.valueOf(consuming % 60)+" 秒)");
 
     }
 
@@ -728,183 +730,8 @@ public class CompareUtils {
         }
     }
 
-    /**
-     * 分组文件内容（对同组的分配组号，组号为 UUID）
-     *
-     * @param src
-     * @param dest
-     * @param encoding
-     * @param separator
-     */
-    public static void groupKeyKeyStructureFileContent(File src, File dest, String encoding, String separator) {
-        BufferedWriter destWriter = null;
-
-        BufferedReader remainingReader = null;
-        BufferedWriter remainingWriter = null;
-
-        try {
-            if (dest.exists()) {
-                dest.delete();
-            }
-            destWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dest, true), encoding), BUFFER_SIZE);
-
-            String dir = FilenameUtils.getPath(src.getAbsolutePath());
-
-            // 复制源文件至比对剩余文件
-            FileUtils.copyFile(src, new File(dir + "group-tmp1"));
-            // 遍历来源文件找到匹配的记录，分配组号并追加至输出文件
-            Bag bag = new HashBag();
-            String line = null;
-            int operateIndex = 0;
-            int groupedIndex = 0;
-            while (true) {
-                remainingReader = new BufferedReader(new InputStreamReader(new FileInputStream((operateIndex % 2) == 0 ? new File(dir + "group-tmp1") : new File(dir + "group-tmp2")), encoding), BUFFER_SIZE);
-                remainingWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream((operateIndex % 2) == 0 ? new File(dir + "group-tmp2") : new File(dir + "group-tmp1")), encoding), BUFFER_SIZE);
-                operateIndex++;
-                int index = 0;
-                while ((line = remainingReader.readLine()) != null) {
-                    String[] ll = line.split(separator);
-                    if (ll.length > 1) {
-                        KeyKey kk = new KeyKey(ll[0], ll[1], separator);
-                        if (index > 0) {
-                            // 若大于首个有效行，则判断是否已存在
-                            if (containsKeyKey(bag, kk)) {
-                                // 排除重复
-                                if (!existsKeyKey(bag, kk)) {
-                                    bag.add(kk);
-                                }
-                            } else {
-                                // 若不存在，则将数据写入剩余文件
-                                if (index > 0) {
-                                    remainingWriter.newLine();
-                                }
-                                remainingWriter.write(line);
-                            }
-                        } else {
-                            // 若为首个有效行，增加第一个数据
-                            bag.add(kk);
-                        }
-                        index++;
-                    }
-                }
-
-                // 若待分组的文件有效记录存在，则执行下面的操作
-                if (index > 0) {
-                    // 将分组写入分组文件（目标文件）
-                    writeKeyKeysWithUUID(bag, destWriter, separator, groupedIndex > 0 ? false : true);
-                    bag.clear();
-                    //
-                    remainingWriter.flush();
-                    groupedIndex++;
-                } else {
-                    // 分组文件处理完毕，退出循环
-                    break;
-                }
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (remainingReader != null) {
-                try {
-                    remainingReader.close();
-                    remainingReader = null;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (remainingWriter != null) {
-                try {
-                    remainingWriter.flush();
-                    remainingWriter.close();
-                    remainingWriter = null;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (destWriter != null) {
-                try {
-                    destWriter.flush();
-                    destWriter.close();
-                    destWriter = null;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-
-    /**
-     * 判断是为同组记录（根据 Key Key 判断）
-     *
-     * @param bag
-     * @param kk
-     * @return
-     */
-    private static boolean containsKeyKey(Bag bag, KeyKey kk) {
-        boolean result = false;
-        Iterator iter = bag.iterator();
-        while (iter.hasNext()) {
-            KeyKey bean = (KeyKey) iter.next();
-            if (bean.contains(kk)) {
-                result = true;
-                break;
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * 判断是为同组记录（根据 Key Key 判断）
-     *
-     * @param bag
-     * @param kk
-     * @return
-     */
-    private static boolean existsKeyKey(Bag bag, KeyKey kk) {
-        boolean result = false;
-        Iterator iter = bag.iterator();
-        while (iter.hasNext()) {
-            KeyKey bean = (KeyKey) iter.next();
-            if (bean.equals(kk)) {
-                result = true;
-                break;
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * 将分组记录（集合）分配组号并写入缓冲区
-     *
-     * @param bag
-     * @param writer
-     * @param separator
-     * @param isFirstGroup
-     * @throws IOException
-     */
-    private static void writeKeyKeysWithUUID(Bag bag, BufferedWriter writer, String separator, boolean isFirstGroup) throws IOException {
-        Iterator iter = bag.iterator();
-        String uuid = Uuid.getUuid();
-        int count = bag.size();
-        String gx = count > 1 ? "n" : "1";
-        int index = 0;
-        while (iter.hasNext()) {
-            KeyKey bean = (KeyKey) iter.next();
-            if (!isFirstGroup || index > 0) {
-                writer.newLine();
-            }
-            writer.write(gx + separator + uuid + separator + bean.toString());
-            index++;
-        }
-        logger.debug("组号: {}, 共 {} 条记录", uuid, index);
-    }
-
     // 根据操作系统 CPU 数量和比对文件数量乘积判定生成的线程池（类型）
-    private static ExecutorService getThreadPool(int fSize, int sSize) {
+    private static ExecutorService smartThreadPool(int fSize, int sSize) {
         return (Runtime.getRuntime().availableProcessors() * 10 > fSize * sSize) ? Executors.newCachedThreadPool() : Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 10);
     }
 

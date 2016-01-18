@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 
-import org.apache.commons.collections.MapIterator;
-import org.apache.commons.collections.map.LinkedMap;
+import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

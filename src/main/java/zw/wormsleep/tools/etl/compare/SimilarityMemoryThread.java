@@ -47,9 +47,8 @@ public class SimilarityMemoryThread extends Thread {
 
     @Override
     public void run() {
-        String threadName = Thread.currentThread().getName();
         long startTime = System.currentTimeMillis();
-
+        String threadName = Thread.currentThread().getName();
 
         List<String> ml = new ArrayList<String>();
 
@@ -64,7 +63,7 @@ public class SimilarityMemoryThread extends Thread {
                 fIndex++;
                 String[] fls = fLine.split(fSeparator);
                 if (fls.length > 1) {
-                    logger.debug("@@@ 线程：{} 待匹配记录：行 {} - {}", threadName, fIndex, fLine);
+//                    logger.debug("@@@ 线程：{} 待匹配记录：行 {} - {}", threadName, fIndex, fLine);
                     for (String sLine : sl) {
                         String[] sls = sLine.split(sSeparator);
                         if (sls.length > 1) {
@@ -75,7 +74,7 @@ public class SimilarityMemoryThread extends Thread {
                                 fKey = fls[0];
                                 sKey = sls[0];
                                 ml.add(fKey + mSeparator + sKey);
-                                logger.info("@@@ 线程：{} 匹配 - {}\n匹配关键字\t{} - {}\n内容 1：{}\n内容 2：{}", threadName, matchedCount, fKey, sKey, first, second);
+                                logger.debug("@@@ 线程：{} 匹配 - {} (行号：{})\n匹配关键字\t{} - {}\n内容 1：{}\n内容 2：{}", threadName, matchedCount, fIndex, fKey, sKey, first, second);
                             }
                         }
                     }
@@ -90,8 +89,6 @@ public class SimilarityMemoryThread extends Thread {
 
         } catch (IOException e) {
             logger.error("IO 异常", e);
-        } finally {
-
         }
     }
 }
