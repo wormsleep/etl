@@ -80,10 +80,10 @@ public class SimilarityMemoryLimitedScopeThread extends Thread {
                     currentLengthCompareUnits = sScus.getLimitedCompareUnits(currentLength, similarityLimitedLengthScope);
                 }
 
-                logger.debug("@@@ 线程：{} \n 待比对数据长度：{} 提取比对数据长度：{} 提取比对数据记录数：{}", threadName, curLen, currentLength, currentLengthCompareUnits.length);
+                logger.debug("@@@ 线程：{} \n 待比对数据长度：{} 受限范围：{} 提取比对数据长度：{} 提取比对数据记录数：{}", threadName, curLen, similarityLimitedLengthScope, currentLength, currentLengthCompareUnits.length);
 
                 for (CompareUnit scu : currentLengthCompareUnits) {
-                    // 比对内容长度小于 5 的进行精确匹配，大于 5 的进行相似度匹配
+                    // 比对内容长度小于 5 的进行精确匹配，大于等于 5 的进行相似度匹配
                     if (currentLength < 5) {
                         if (fcu.content.equals(scu.content)) {
                             ml.add(fcu.key + mSeparator + scu.key);
