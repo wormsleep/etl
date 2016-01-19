@@ -18,7 +18,7 @@ public class CompareUtils {
     final static Logger logger = LoggerFactory.getLogger(CompareUtils.class);
 
     private static final int BUFFER_SIZE = 10 * 1024 * 1024;
-    private static final int SPLIT_LINE_SIZE = 5000;
+    private static final int SPLIT_LINE_SIZE = 10000;
     private final static String SEPARATOR = "!@#";
     private final static String ENCODING = "UTF-8";
     private final static int LIMITED_LENGTH_SCOPE = 4;

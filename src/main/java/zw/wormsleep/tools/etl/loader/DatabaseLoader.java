@@ -124,7 +124,7 @@ public class DatabaseLoader implements ETLLoader {
 			while (iter.hasNext()) {
 				data = iter.next();
 				// 优化数据正确性
-				if(data.size() < 1) {
+				if(data == null) {
 					continue;
 				}
 				// 数据转换

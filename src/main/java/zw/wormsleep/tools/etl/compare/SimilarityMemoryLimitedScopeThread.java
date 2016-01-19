@@ -88,13 +88,13 @@ public class SimilarityMemoryLimitedScopeThread extends Thread {
                         if (fcu.content.equals(scu.content)) {
                             ml.add(fcu.key + mSeparator + scu.key);
                             matchedCount++;
-                            logger.info("@@@ 线程：{} 已匹配 - {}\n匹配关键字\t{} - {}\n内容 1：{}\n内容 2：{}", threadName, matchedCount, fcu.key, scu.key, fcu.content, scu.content);
+                            logger.debug("@@@ 线程：{} 已匹配 - {}\n匹配关键字\t{} - {}\n内容 1：{}\n内容 2：{}", threadName, matchedCount, fcu.key, scu.key, fcu.content, scu.content);
                         }
                     } else {
                         if (comparator.compare(fcu.content, scu.content)) {
                             ml.add(fcu.key + mSeparator + scu.key);
                             matchedCount++;
-                            logger.info("@@@ 线程：{} 已匹配 - {}\n匹配关键字\t{} - {}\n内容 1：{}\n内容 2：{}", threadName, matchedCount, fcu.key, scu.key, fcu.content, scu.content);
+                            logger.debug("@@@ 线程：{} 已匹配 - {}\n匹配关键字\t{} - {}\n内容 1：{}\n内容 2：{}", threadName, matchedCount, fcu.key, scu.key, fcu.content, scu.content);
                         }
                     }
                 }

@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -92,14 +93,18 @@ public class TextETLExtractor implements ETLExtractor {
 
         @Override
         public Map<String, Object> next() {
-            Map<String, Object> map = new HashMap<String, Object>();
+            Map<String, Object> map =  null;
 
-            String[] values = line.split(separator);
+            // 优化数据正确性 - 分隔符判断
+            if(line.contains(separator)) {
+                String[] values = line.split(separator);
 
-            // 优化数据正确性
-            if (values.length >= columnCount) {
-                for (String key : columnPosition.keySet()) {
-                    map.put(key, values[columnPosition.get(key)].trim());
+                // 优化数据正确性 - 分割值数量判断
+                if (values.length >= columnCount) {
+                    map = new HashMap<String, Object>();
+                    for (String key : columnPosition.keySet()) {
+                        map.put(key, values[columnPosition.get(key)].trim());
+                    }
                 }
             }
 

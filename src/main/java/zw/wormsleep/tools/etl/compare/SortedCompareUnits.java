@@ -111,7 +111,7 @@ public class SortedCompareUnits {
                 }
             }
 
-            return (end >= start && start > 0 && end > 0) ? Arrays.copyOfRange(compareUnits, start, end+1) : new CompareUnit[]{};
+            return (end >= start && start >= 0 && end >= 0) ? Arrays.copyOfRange(compareUnits, start, end+1) : new CompareUnit[]{};
 
         } else {
             int position = Arrays.binarySearch(groupedLength, length);
