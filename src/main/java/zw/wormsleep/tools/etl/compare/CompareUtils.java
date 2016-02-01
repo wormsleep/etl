@@ -3,6 +3,7 @@ package zw.wormsleep.tools.etl.compare;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import zw.wormsleep.tools.etl.utils.ThreadUtils;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -22,6 +23,7 @@ public class CompareUtils {
     private final static String SEPARATOR = "!@#";
     private final static String ENCODING = "UTF-8";
     private final static int LIMITED_LENGTH_SCOPE = 4;
+    private final static int POWER = 2; // 多线程倍率
 
     /**
      * 相似度比较。
@@ -291,7 +293,7 @@ public class CompareUtils {
         String mFullPath = FilenameUtils.getFullPath(path);
         String mFilename = FilenameUtils.getBaseName(path);
 
-        ExecutorService pool = smartThreadPool(fPartsCount, sPartsCount);
+        ExecutorService pool = ThreadUtils.smartThreadPool(fPartsCount, sPartsCount, POWER);
 
         for (int fi = 0; fi < fPartsCount; fi++) {
 
@@ -400,7 +402,7 @@ public class CompareUtils {
         String mFullPath = FilenameUtils.getFullPath(path);
         String mFilename = FilenameUtils.getBaseName(path);
 
-        ExecutorService pool = smartThreadPool(fPartsCount, sPartsCount);
+        ExecutorService pool = ThreadUtils.smartThreadPool(fPartsCount, sPartsCount, POWER);
 
         for (int fi = 0; fi < fPartsCount; fi++) {
 
@@ -730,9 +732,6 @@ public class CompareUtils {
         }
     }
 
-    // 根据操作系统 CPU 数量和比对文件数量乘积判定生成的线程池（类型）
-    private static ExecutorService smartThreadPool(int fSize, int sSize) {
-        return (Runtime.getRuntime().availableProcessors() * 10 > fSize * sSize) ? Executors.newCachedThreadPool() : Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 10);
-    }
+
 
 }
