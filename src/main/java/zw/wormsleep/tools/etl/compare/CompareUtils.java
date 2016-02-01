@@ -10,7 +10,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Created by wormsleep on 2015/11/25.
@@ -19,7 +18,8 @@ public class CompareUtils {
     final static Logger logger = LoggerFactory.getLogger(CompareUtils.class);
 
     private static final int BUFFER_SIZE = 10 * 1024 * 1024;
-    private static final int SPLIT_LINE_SIZE = 5000;
+    private static final int COMPARE_SPLIT_LINE_SIZE = 5 * 1000;
+    private static final int SORT_SPLIT_LINE_SIZE = 10 * 1000;
     private final static String SEPARATOR = "!@#";
     private final static String ENCODING = "UTF-8";
     private final static int LIMITED_LENGTH_SCOPE = 4;
@@ -39,7 +39,7 @@ public class CompareUtils {
      * @param matched   匹配输出文件
      */
     public static void similarity(File f, File s, Double threshold, File matched) {
-        similarity(f, SEPARATOR, ENCODING, s, SEPARATOR, ENCODING, threshold, matched, SEPARATOR, ENCODING, new JaroWinklerDistanceComparator(threshold), SPLIT_LINE_SIZE, SPLIT_LINE_SIZE, LIMITED_LENGTH_SCOPE);
+        similarity(f, SEPARATOR, ENCODING, s, SEPARATOR, ENCODING, threshold, matched, SEPARATOR, ENCODING, new JaroWinklerDistanceComparator(threshold), COMPARE_SPLIT_LINE_SIZE, COMPARE_SPLIT_LINE_SIZE, LIMITED_LENGTH_SCOPE);
     }
 
     /**
@@ -57,7 +57,7 @@ public class CompareUtils {
      * @param comparator 比较器
      */
     public static void similarity(File f, File s, Double threshold, File matched, SimilarityComparator comparator) {
-        similarity(f, SEPARATOR, ENCODING, s, SEPARATOR, ENCODING, threshold, matched, SEPARATOR, ENCODING, comparator, SPLIT_LINE_SIZE, SPLIT_LINE_SIZE, LIMITED_LENGTH_SCOPE);
+        similarity(f, SEPARATOR, ENCODING, s, SEPARATOR, ENCODING, threshold, matched, SEPARATOR, ENCODING, comparator, COMPARE_SPLIT_LINE_SIZE, COMPARE_SPLIT_LINE_SIZE, LIMITED_LENGTH_SCOPE);
     }
 
     /**
@@ -76,7 +76,7 @@ public class CompareUtils {
      * @param encoding  文件编码（首文件、次文件、输出文件一致）
      */
     public static void similarity(File f, File s, Double threshold, File matched, String separator, String encoding, SimilarityComparator comparator) {
-        similarity(f, separator, encoding, s, separator, encoding, threshold, matched, separator, encoding, comparator, SPLIT_LINE_SIZE, SPLIT_LINE_SIZE, LIMITED_LENGTH_SCOPE);
+        similarity(f, separator, encoding, s, separator, encoding, threshold, matched, separator, encoding, comparator, COMPARE_SPLIT_LINE_SIZE, COMPARE_SPLIT_LINE_SIZE, LIMITED_LENGTH_SCOPE);
     }
 
     /**
@@ -324,7 +324,7 @@ public class CompareUtils {
 
         long endTime = System.currentTimeMillis();
         long consuming = (endTime - startTime) / 1000;
-        logger.info("@@@ 相似度（多线程）比较耗时 : {} ", (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟 (约为 "+String.valueOf(consuming % 60)+" 秒)");
+        logger.info("@@@ 相似度（多线程）比较耗时 : {} ", (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟 (约为 " + String.valueOf(consuming % 60) + " 秒)");
 
     }
 
@@ -439,7 +439,7 @@ public class CompareUtils {
 
         long endTime = System.currentTimeMillis();
         long consuming = (endTime - startTime) / 1000;
-        logger.info("@@@ 相似度（多线程）比较耗时 : {} ", (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟 (约为 "+String.valueOf(consuming % 60)+" 秒)");
+        logger.info("@@@ 相似度（多线程）比较耗时 : {} ", (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟 (约为 " + String.valueOf(consuming % 60) + " 秒)");
 
     }
 
@@ -627,7 +627,7 @@ public class CompareUtils {
      * @param encoding
      * @param separator
      */
-    public static void reverseTwoDomainFileContent(File src, File dest, String encoding, String separator) {
+    public static void reverseKeyKeyFile(File src, File dest, String encoding, String separator) {
         BufferedReader reader = null;
         BufferedWriter writer = null;
 
@@ -732,6 +732,18 @@ public class CompareUtils {
         }
     }
 
+    /**
+     * 对文件内容按指定域排序
+     *
+     * @param src                   源文件
+     * @param encoding              文件编码
+     * @param separator             域分隔符
+     * @param sortField             指定排序字段位置（从 0 开始）
+     * @param isFilteringEmptyField 是否过滤排序字段值为空的记录
+     * @param dest                  排序后的目标文件
+     */
+    public void sortFile(File src, String encoding, String separator, int sortField, boolean isFilteringEmptyField, File dest) {
+    }
 
 
 }
