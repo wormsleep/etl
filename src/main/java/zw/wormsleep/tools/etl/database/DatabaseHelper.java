@@ -10,12 +10,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.ResultSetDynaClass;
@@ -822,9 +817,11 @@ public class DatabaseHelper {
             logger.info("@@@ 数据库产品 - 源数据库: {} 目标数据库: {} ", srcDatabaseType, destDatabaseType);
             // 获取源数据库 - 表元数据
             logger.info("@@@ 分析源数据库表信息 ...");
-            rs = srcDatabaseMetaData.getColumns(srcCatalog, srcSchemaPattern, srcTableNamePattern, null);
+            rs = srcDatabaseMetaData.getTables(srcCatalog, srcSchemaPattern, srcTableNamePattern, new String[]{"TABLE"});
+            srcTables = getTablesList(rs);
             // 分析并生成 - 源数据库 - 表元数据描述对象集 Map<String, Map<String, Object>>
-            srcTablesObject = getTablesMetadata(rs);
+            rs = srcDatabaseMetaData.getColumns(srcCatalog, srcSchemaPattern, srcTableNamePattern, null);
+            srcTablesObject = getTablesMetadata(rs, srcTables);
             logger.info("@@@ 源数据库表分析完毕 ! 待处理表总数: {}", srcTablesObject.size());
             // 分析并生成 - 目标数据库 - 建表语句
             // *** 数据字段类型转换器
@@ -846,7 +843,6 @@ public class DatabaseHelper {
                 String tableDDL = ddlMaker.createTable(tableName, columnsMetadata, typeConverter, primarykeyName, primarykeys);
                 tablesDDL.put(tableName, tableDDL);
                 logger.debug("@@@ {} 表建表语句 \n {}", tableName, tableDDL);
-                srcTables.add(tableName);
             }
 
             // @@@ 目标数据库建表部分
@@ -925,7 +921,8 @@ public class DatabaseHelper {
     /**
      * 获取表元数据描述对象集
      *
-     * @param rs 从 DatabaseMetaData 对象方法 getColumns(...) 中获取的元数据结果集
+     * @param rs     从 DatabaseMetaData 对象方法 getColumns(...) 中获取的元数据结果集
+     * @param tables 通过 DatabaseMetaData 对象方法 getTables(..., new String[]{"TABLE"}) 中获取的仅表对象列表
      * @return 结果集结构描述如下
      * {
      * {
@@ -944,13 +941,19 @@ public class DatabaseHelper {
      * ...
      * }
      */
-    private static Map<String, Map<String, Map<String, Object>>> getTablesMetadata(ResultSet rs) {
+    private static Map<String, Map<String, Map<String, Object>>> getTablesMetadata(ResultSet rs, List<String> tables) {
         Map<String, Map<String, Map<String, Object>>> result = new LinkedHashMap<String, Map<String, Map<String, Object>>>();
         Object value = null;
+        // 依表名列表组装排序的待比对表名数组
+        String[] ts = new String[tables.size()];
+        ts = tables.toArray(ts);
+        Arrays.sort(ts);
         try {
             while (rs.next()) {
                 // 获取单行记录中的表名
                 String tableName = rs.getString(3);
+                //* 依表名列表精确判断是否为表
+                if (Arrays.binarySearch(ts, tableName) < 0) continue;
                 // 依据该表名为主键判断是否已创建, 若无则新建对象
                 Map<String, Map<String, Object>> t = result.containsKey(tableName) ? result.get(tableName) : new LinkedHashMap<String, Map<String, Object>>();
                 // 获取单行记录中的列名
