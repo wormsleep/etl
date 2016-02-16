@@ -89,7 +89,7 @@ public class DatabaseLoader implements ETLLoader {
 
             String sql = DatabaseHelper
                     .getBatchInsertSQL((isTable2Table ? null : dbType), table, fields, updateFields);
-            logger.info("@@@ Insert SQL - 预处理 {}", sql);
+            logger.info("@@@ Insert SQL - 预处理 {} ", sql);
             // *****************
             // if(true) return;
             // ****************
