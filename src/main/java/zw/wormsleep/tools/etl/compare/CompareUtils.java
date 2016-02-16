@@ -682,16 +682,16 @@ public class CompareUtils {
                     break;
                 } else {
                     writer.write(lines[indexOfMinKeyReader] + LINE_SEPARATOR);
-                    logger.info("\n处理计数：{}\n 各文件读取行：{} 输出文件索引：{} \n 输出行: {}",++lcount, dddd,indexOfMinKeyReader, lines[indexOfMinKeyReader]);
+                    logger.info("\n处理计数：{}\n 各文件读取行：{} 输出文件索引：{} \n 输出行: {}\n", ++lcount, dddd, indexOfMinKeyReader, lines[indexOfMinKeyReader]);
                     // 准备下一次比较数据 - 从最小值行对应的文件中提取下一行
                     line = done[indexOfMinKeyReader] ? null : readers.get(indexOfMinKeyReader).readLine();
-                    if (line != null) {
-                        lines[indexOfMinKeyReader] = line;
-                    } else {
+                    lines[indexOfMinKeyReader] = line;
+                    if (line == null) {
                         logger.info("@@@  子文件 {} 读取完毕！", indexOfMinKeyReader);
                         done[indexOfMinKeyReader] = true;
                         doneCount++;
                     }
+
                 }
             }
 

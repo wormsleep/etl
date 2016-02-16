@@ -145,7 +145,7 @@ public class DatabaseLoader implements ETLLoader {
                     pstmt.executeBatch();
                     conn.commit(); // 提交
                     pstmt.clearBatch();
-                    logger.debug("已处理：" + lcnt + " 条");
+                    logger.info("已处理：" + lcnt + " 条");
                 }
 
             }
