@@ -46,6 +46,7 @@ public class PreparedStatementPool {
 		Map<String, String> poolConfig = loadConfig.getDatabaseConfiguration();
 		String table = loadConfig.getTable();
 		Map<String, Boolean> fields = loadConfig.getFields();
+		Map<String, Boolean> updateFields = loadConfig.getUpdateFields();
 		String selectSQL = "";
 		boolean isTable2Table = fields.size() < 1 ? true : false;
 		if(isTable2Table) { // 对于未定义导入列，即表对表拷贝时
@@ -83,7 +84,7 @@ public class PreparedStatementPool {
 			} 
 			
 			String sql = DatabaseHelper
-					.getBatchInsertSQL(dbType, table, fields);
+					.getBatchInsertSQL(dbType, table, fields, updateFields);
 			logger.debug("@@@ Insert SQL - 预处理 {}", sql);
 			// *****************
 			// if(true) return;
