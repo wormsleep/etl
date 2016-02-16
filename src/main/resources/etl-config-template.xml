@@ -28,6 +28,7 @@
 			<database type="sybase">输出数据库节点名称（其节点在本文件里的 database 节点中定义）</database>
 			<table>table name</table>
 			<batchsize>200 ( 默认: 200 )</batchsize>
+			<ignoreupdate>默认值：false - 是否在 if exists update insert 语句中执行 update（实际处理是通过 update table set key=:key where 1=0 达到该效果）</ignoreupdate>
 		</output>
 		<!-- 输出地 - 文件 -->
 		<output type="file">

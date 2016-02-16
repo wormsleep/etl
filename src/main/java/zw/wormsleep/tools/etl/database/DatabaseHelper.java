@@ -494,12 +494,13 @@ public class DatabaseHelper {
      */
     public static String getBatchInsertSQL(String dbType, String table,
                                            Map<String, Boolean> fields,
-                                           Map<String, Boolean> updateFields) {
+                                           Map<String, Boolean> updateFields,
+                                           boolean ignoreUpdate) {
         String batchInsertSQL = null;
 
         if (dbType != null && !dbType.equals("")) {
             if (dbType.equalsIgnoreCase("sybase")) {
-                batchInsertSQL = assembleSybaseBatchInsertSQL(table, fields, updateFields);
+                batchInsertSQL = assembleSybaseBatchInsertSQL(table, fields, updateFields, ignoreUpdate);
             } else if (dbType.equalsIgnoreCase("mysql")) {
                 batchInsertSQL = assembleMySQLBatchInsertSQL(table, fields);
             } else if (dbType.equalsIgnoreCase("oracle")) {
@@ -584,7 +585,8 @@ public class DatabaseHelper {
      */
     public static String assembleSybaseBatchInsertSQL(String table,
                                                       Map<String, Boolean> fields,
-                                                      Map<String, Boolean> updateFields) {
+                                                      Map<String, Boolean> updateFields,
+                                                      boolean ignoreUpdate) {
         StringBuffer sql = new StringBuffer();
         StringBuffer fieldsPart = new StringBuffer();
         StringBuffer valuesPart = new StringBuffer();
@@ -610,8 +612,13 @@ public class DatabaseHelper {
                     + wherePart.substring(0, wherePart.length() - 5) + ")");
             sql.append(" update " + table + " set "
                     + updatePart.substring(0, updatePart.length() - 1));
-            sql.append(" where "
-                    + wherePart.substring(0, wherePart.length() - 5));
+            // 通过特殊语句支持忽略 update 语句效果
+            if (ignoreUpdate) {
+                sql.append(" where 1=0 ");
+            } else {
+                sql.append(" where "
+                        + wherePart.substring(0, wherePart.length() - 5));
+            }
             sql.append(" else ");
         }
         sql.append(" insert into " + table);

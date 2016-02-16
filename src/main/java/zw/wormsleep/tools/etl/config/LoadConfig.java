@@ -24,4 +24,5 @@ public interface LoadConfig {
 	int getThreadCount(); // 线程数  ( 表对表批量传输使用 )
 	int getBatchSize(); // 批量处理数  ( 数据库 )
 	boolean truncateTableBeforeLoad(); // 导入数据库前是否先清除表数据
+	boolean ignoreUpdate(); // 导入数据库时是否在 if exists update else insert 语句中忽略 update 操作
 }

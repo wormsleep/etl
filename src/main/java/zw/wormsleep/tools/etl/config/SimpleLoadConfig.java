@@ -35,6 +35,7 @@ public class SimpleLoadConfig implements LoadConfig {
     final String NODE_OUTPUT_BATCH_SIZE = "output.batchsize";
     final String NODE_OUTPUT_TEMPLATE_COLLECTION = "templatecollection";
     final String NODE_OUTPUT_TRUNCATE_TABLE_BEFORE_LOAD = "output.truncatetablebeforeload";
+    final String NODE_OUTPUT_IGNORE_UPDATE = "output.ignoreupdate";
 
     private HierarchicalConfiguration business;
     private Map<String, String> database;
@@ -185,6 +186,11 @@ public class SimpleLoadConfig implements LoadConfig {
     @Override
     public boolean truncateTableBeforeLoad() {
         return business.getBoolean(NODE_OUTPUT_TRUNCATE_TABLE_BEFORE_LOAD, false);
+    }
+
+    @Override
+    public boolean ignoreUpdate() {
+        return business.getBoolean(NODE_OUTPUT_IGNORE_UPDATE, false);
     }
 
     @Override
