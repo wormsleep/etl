@@ -4,6 +4,7 @@ import java.util.Map;
 
 public interface LoadConfig {
 	Map<String, Boolean> getFields(); // 目标输出加载字段集合
+	Map<String, Boolean> getUpdateFields(); // 目标输出加载更新字段集合
 	String getOutputType(); // 目标输出类型
 	String getDatabase(); // 目标数据库节点名称
 	String getDatabaseType(); // 目标数据库类型

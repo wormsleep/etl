@@ -13,6 +13,7 @@ import zw.wormsleep.tools.etl.utils.ConfigParserUtils;
 public class SimpleLoadConfig implements LoadConfig {
 
     final String PROP_KEY = "[@key]";
+    final String PROP_UPDATE = "[@update]";
     final String NODE_NAME = "name";
     final String NODE_FIELD = "field";
     final String NODE_OUTPUT = "output";
@@ -70,6 +71,28 @@ public class SimpleLoadConfig implements LoadConfig {
         }
 
         return fields;
+    }
+
+    @Override
+    public Map<String, Boolean> getUpdateFields() {
+        Map<String, Boolean> updateFields = new LinkedHashMap<String, Boolean>();
+
+        List<HierarchicalConfiguration> columns = ConfigParserUtils
+                .getColumnConfiguration(business);
+
+        for (HierarchicalConfiguration column : columns) {
+            String field = column.getString(NODE_FIELD);
+            String update = column.getString(PROP_UPDATE);
+
+            if (update != null && update.equalsIgnoreCase("false")) {
+                updateFields.put(field, false);
+            } else {
+                updateFields.put(field, true);
+            }
+
+        }
+
+        return updateFields;
     }
 
     @Override

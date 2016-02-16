@@ -1,17 +1,5 @@
 package zw.wormsleep.tools.etl.database;
 
-import java.beans.PropertyVetoException;
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.*;
-
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.ResultSetDynaClass;
 import org.apache.commons.configuration.ConfigurationException;
@@ -19,13 +7,18 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import zw.wormsleep.tools.etl.multitask.MultiTaskMultiThread;
 import zw.wormsleep.tools.etl.multitask.Task;
 import zw.wormsleep.tools.etl.multitask.multithread.NTaskPerThread;
 import zw.wormsleep.tools.etl.multitask.task.Table2TableTask;
 import zw.wormsleep.tools.etl.utils.ConfigBuilderUtils;
 import zw.wormsleep.tools.etl.utils.ConfigParserUtils;
+
+import java.beans.PropertyVetoException;
+import java.io.File;
+import java.io.IOException;
+import java.sql.*;
+import java.util.*;
 
 public class DatabaseHelper {
     static final Logger logger = LoggerFactory.getLogger(DatabaseHelper.class);
@@ -500,12 +493,13 @@ public class DatabaseHelper {
      * @return
      */
     public static String getBatchInsertSQL(String dbType, String table,
-                                           Map<String, Boolean> fields) {
+                                           Map<String, Boolean> fields,
+                                           Map<String, Boolean> updateFields) {
         String batchInsertSQL = null;
 
         if (dbType != null && !dbType.equals("")) {
             if (dbType.equalsIgnoreCase("sybase")) {
-                batchInsertSQL = assembleSybaseBatchInsertSQL(table, fields);
+                batchInsertSQL = assembleSybaseBatchInsertSQL(table, fields, updateFields);
             } else if (dbType.equalsIgnoreCase("mysql")) {
                 batchInsertSQL = assembleMySQLBatchInsertSQL(table, fields);
             } else if (dbType.equalsIgnoreCase("oracle")) {
@@ -589,7 +583,8 @@ public class DatabaseHelper {
      * INSERT INTO TABLE_NAME ( FIELD1,FIELD2,FIELD3,... ) VALUES ( :FIELD1,:FIELD2,:FIELD3 )
      */
     public static String assembleSybaseBatchInsertSQL(String table,
-                                                      Map<String, Boolean> fields) {
+                                                      Map<String, Boolean> fields,
+                                                      Map<String, Boolean> updateFields) {
         StringBuffer sql = new StringBuffer();
         StringBuffer fieldsPart = new StringBuffer();
         StringBuffer valuesPart = new StringBuffer();
@@ -604,7 +599,9 @@ public class DatabaseHelper {
             if (fields.get(key)) {
                 wherePart.append(key + "=:" + key + CONST_AND);
             }
-            updatePart.append(key + "=:" + key + COMMA);
+            if(updateFields.get(key)) {
+                updatePart.append(key + "=:" + key + COMMA);
+            }
         }
         // 静态组装部分
         if (wherePart.length() > 0) { // 若需要排重语句

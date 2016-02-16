@@ -73,6 +73,13 @@
 				<name>key-column-name</name>
 				<field>key-field-name</field>
 			</column>
+			<!-- 更新操作列
+				update 属性默认值为 true，当且仅当值为 false 时，不进行更新操作，即不在 update 语句列中
+			-->
+			<column update="false">
+				<name>key-column-name</name>
+				<field>key-field-name</field>
+			</column>
 			<!-- 自动生成列 
 						@type auto-generate 自动生成 
 						@value uuid 由程序自动生成 uuid date 日期 

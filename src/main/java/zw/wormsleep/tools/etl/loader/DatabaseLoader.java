@@ -42,6 +42,7 @@ public class DatabaseLoader implements ETLLoader {
         Map<String, String> poolConfig = loadConfig.getDatabaseConfiguration();
         String table = loadConfig.getTable();
         Map<String, Boolean> fields = loadConfig.getFields();
+        Map<String, Boolean> updateFields = loadConfig.getUpdateFields();
         String selectSQL = "";
         boolean isTable2Table = fields.size() < 1 ? true : false;
         if (isTable2Table) { // 对于未定义导入列，即表对表拷贝时
@@ -87,7 +88,7 @@ public class DatabaseLoader implements ETLLoader {
             }
 
             String sql = DatabaseHelper
-                    .getBatchInsertSQL((isTable2Table ? null : dbType), table, fields);
+                    .getBatchInsertSQL((isTable2Table ? null : dbType), table, fields, updateFields);
             logger.info("@@@ Insert SQL - 预处理 {}", sql);
             // *****************
             // if(true) return;

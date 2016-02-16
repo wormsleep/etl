@@ -1,6 +1,8 @@
 package zw.wormsleep.tools.etl.compare;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import zw.wormsleep.tools.etl.utils.ThreadUtils;
@@ -8,6 +10,7 @@ import zw.wormsleep.tools.etl.utils.ThreadUtils;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.text.Collator;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 
@@ -19,11 +22,13 @@ public class CompareUtils {
 
     private static final int BUFFER_SIZE = 10 * 1024 * 1024;
     private static final int COMPARE_SPLIT_LINE_SIZE = 5 * 1000;
-    private static final int SORT_SPLIT_LINE_SIZE = 10 * 1000;
+    private static final int SORT_SPLIT_LINE_SIZE = 20;
     private final static String SEPARATOR = "!@#";
     private final static String ENCODING = "UTF-8";
     private final static int LIMITED_LENGTH_SCOPE = 4;
     private final static int POWER = 2; // 多线程倍率
+    private final static String LINE_SEPARATOR = (String) java.security.AccessController.doPrivileged(
+            new sun.security.action.GetPropertyAction("line.separator"));
 
     /**
      * 相似度比较。
@@ -293,7 +298,7 @@ public class CompareUtils {
         String mFullPath = FilenameUtils.getFullPath(path);
         String mFilename = FilenameUtils.getBaseName(path);
 
-        ExecutorService pool = ThreadUtils.smartThreadPool(fPartsCount, sPartsCount, POWER);
+        ExecutorService pool = ThreadUtils.smartSimilarityThreadPool(fPartsCount, sPartsCount, POWER);
 
         for (int fi = 0; fi < fPartsCount; fi++) {
 
@@ -402,7 +407,7 @@ public class CompareUtils {
         String mFullPath = FilenameUtils.getFullPath(path);
         String mFilename = FilenameUtils.getBaseName(path);
 
-        ExecutorService pool = ThreadUtils.smartThreadPool(fPartsCount, sPartsCount, POWER);
+        ExecutorService pool = ThreadUtils.smartSimilarityThreadPool(fPartsCount, sPartsCount, POWER);
 
         for (int fi = 0; fi < fPartsCount; fi++) {
 
@@ -448,10 +453,10 @@ public class CompareUtils {
      *
      * @param file     文件
      * @param encoding 文件编码
-     * @param lines    每个文件的最大行数
+     * @param lineSize 每个文件的最大行数
      * @return 分割的文件列表
      */
-    public static List<File> splitFile(File file, String encoding, int lines) {
+    public static List<File> splitFile(File file, String encoding, int lineSize) {
         List<File> files = new ArrayList<File>();
 
         String path = file.getAbsolutePath();
@@ -477,11 +482,8 @@ public class CompareUtils {
 
             int lineTotalCount = 0;
             while ((line = reader.readLine()) != null) {
-                if (lineCount < lines) {
-                    if (lineCount++ > 0) {
-                        writer.newLine();
-                    }
-                    writer.write(line);
+                if (lineCount++ < lineSize) {
+                    writer.write(line + LINE_SEPARATOR);
                 } else {
                     writer.flush();
 
@@ -489,7 +491,7 @@ public class CompareUtils {
                     writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(part), encoding), BUFFER_SIZE);
                     files.add(part);
 
-                    writer.write(line);
+                    writer.write(line + LINE_SEPARATOR);
                     lineCount = 1;
                 }
                 lineTotalCount++;
@@ -498,7 +500,7 @@ public class CompareUtils {
             logger.info("@@@ 文件分割 ... \n原文件：{}, 共 {} 行；\n按每个文件 {} 行进行分割，共计 {} 个子文件，末文件行数 {}；",
                     filename,
                     lineTotalCount,
-                    lines,
+                    lineSize,
                     files.size(),
                     lineCount);
 
@@ -570,180 +572,164 @@ public class CompareUtils {
     }
 
     /**
-     * 文件内容记录重复清除
-     *
-     * @param src  原文件
-     * @param dest 新文件
-     */
-    public static void removeDuplicateFileContent(File src, File dest, String encoding) {
-        BufferedReader reader = null;
-        BufferedWriter writer = null;
-
-        try {
-            reader = new BufferedReader(new InputStreamReader(new FileInputStream(src), encoding), BUFFER_SIZE);
-            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dest), encoding), BUFFER_SIZE);
-
-            Set<String> contents = new HashSet<String>();
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                contents.add(line); // 去重复
-            }
-
-            int count = 0;
-            for (String c : contents) {
-                if (count++ > 0) {
-                    writer.newLine();
-                }
-                writer.write(c);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                    reader = null;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (writer != null) {
-                try {
-                    writer.flush();
-                    writer.close();
-                    writer = null;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    /**
-     * 交换文件域内容（仅针对有且仅有两个域内容的文件）
-     *
-     * @param src       原文件
-     * @param dest      新文件
-     * @param encoding
-     * @param separator
-     */
-    public static void reverseKeyKeyFile(File src, File dest, String encoding, String separator) {
-        BufferedReader reader = null;
-        BufferedWriter writer = null;
-
-        try {
-            reader = new BufferedReader(new InputStreamReader(new FileInputStream(src), encoding), BUFFER_SIZE);
-            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dest), encoding), BUFFER_SIZE);
-
-            String line = null;
-            int count = 0;
-            while ((line = reader.readLine()) != null) {
-                String[] ll = line.split(separator);
-                if (ll.length > 1) {
-                    if (count++ > 0) {
-                        writer.newLine();
-                    }
-                    writer.write(ll[1] + separator + ll[0]);
-                }
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                    reader = null;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (writer != null) {
-                try {
-                    writer.flush();
-                    writer.close();
-                    writer = null;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    /**
-     * 排序小文件内容
-     *
-     * @param src
-     * @param dest
-     * @param encoding
-     * @param separator
-     */
-    public static void sortSamllFileContent(File src, File dest, String encoding, String separator) {
-        BufferedReader reader = null;
-        BufferedWriter writer = null;
-
-        try {
-            reader = new BufferedReader(new InputStreamReader(new FileInputStream(src), encoding), BUFFER_SIZE);
-            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dest), encoding), BUFFER_SIZE);
-
-            String line = null;
-            SortedSet<String> ss = new TreeSet<String>(new Comparator<String>() {
-                @Override
-                public int compare(String o1, String o2) {
-                    return o1.compareTo(o2);
-                }
-            });
-
-            while ((line = reader.readLine()) != null) {
-                ss.add(line);
-            }
-
-            Iterator<String> iter = ss.iterator();
-            String c = null;
-            int count = 0;
-            while (iter.hasNext()) {
-                c = iter.next();
-                if (count++ > 0) {
-                    writer.newLine();
-                }
-                writer.write(c);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                    reader = null;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (writer != null) {
-                try {
-                    writer.flush();
-                    writer.close();
-                    writer = null;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    /**
      * 对文件内容按指定域排序
      *
-     * @param src                   源文件
-     * @param encoding              文件编码
-     * @param separator             域分隔符
-     * @param sortField             指定排序字段位置（从 0 开始）
-     * @param isFilteringEmptyField 是否过滤排序字段值为空的记录
-     * @param dest                  排序后的目标文件
+     * @param src             源文件
+     * @param encoding        文件编码
+     * @param separator       域分隔符
+     * @param fieldIndex      指定排序字段位置（从 0 开始）
+     * @param allowEmptyField 是否过滤排序字段值为空的记录
      */
-    public void sortFile(File src, String encoding, String separator, int sortField, boolean isFilteringEmptyField, File dest) {
+    public static void sortFile(File src, String encoding, String separator, int fieldIndex, boolean allowEmptyField,
+                                Comparator<KeyValue> comparator) throws IOException {
+
+        logger.info("@@@ 文件域排序开始……\n" +
+                        "***********\n" +
+                        "文件域排序信息\n" +
+                        "***********\n" +
+                        "文件：{}\n" +
+                        "编码：{}\n" +
+                        "分隔符：{}\n" +
+                        "排序域：{} (从 0 开始)\n" +
+                        "允许空域：{}",
+                src.getAbsolutePath(),
+                encoding,
+                separator,
+                fieldIndex,
+                allowEmptyField ? "是" : "否");
+
+        // 比较器默认提供
+        comparator = comparator!= null ? comparator : new Comparator<KeyValue>() {
+            @Override
+            public int compare(KeyValue o1, KeyValue o2) {
+                return Collator.getInstance(Locale.CHINA).compare(o1.getKey(), o2.getKey());
+            }
+        };
+
+        // 分割文件
+        List<File> sfs = splitFile(src, encoding, SORT_SPLIT_LINE_SIZE);
+        // 排序文件 - 多线程排序分割文件
+
+        ExecutorService pool = ThreadUtils.smartSortThreadPool(sfs.size(), 1);
+
+        for (Iterator<File> it = sfs.iterator(); it.hasNext(); ) {
+            pool.execute(new SortSmallFileThread(it.next(), encoding, separator, fieldIndex, allowEmptyField, comparator));
+        }
+
+        pool.shutdown();
+
+        while (true) {
+            if (pool.isTerminated()) {
+                logger.info("@@@ 子文件排序（多线程）完成！ 准备归并排序……。");
+                break;
+            }
+            // 每隔一段时间判断线程是否完成
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Reader 列表
+        List<BufferedReader> readers = new ArrayList<BufferedReader>();
+        BufferedWriter writer = null;
+
+        try {
+            // readers 初始化
+            int bufferSize = 10 * 1024; // 目前先固化 buffer size 大小以后将按内存动态计算
+            for (Iterator<File> it = sfs.iterator(); it.hasNext(); ) {
+                readers.add(new BufferedReader(new InputStreamReader(new FileInputStream(it.next()), encoding), bufferSize));
+            }
+
+            // 归并
+            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(src), encoding), BUFFER_SIZE);
+
+            int count = sfs.size();
+            String[] lines = new String[count];
+            Boolean[] done = new Boolean[count];
+            for(int i=0;i<done.length;done[i]=false,i++);
+            int doneCount = 0;
+            String line;
+
+            int indexOfMinKeyReader = -1;
+
+            // 准备首次比对数据
+            for (int i = 0; i < count; i++) {
+                line = readers.get(i).readLine();
+                if (line != null) {
+                    lines[i] = line;
+                } else {
+                    done[i] = true;
+                    doneCount++;
+                }
+            }
+
+            int lcount = 0;
+            // 循环退出条件 - 所有的文件都已经处理完毕（已按行读取完毕）
+            while (doneCount < count) {
+
+                String dddd = "\n";
+                for(int jj=0;jj<count;jj++) {
+                    dddd += String.valueOf(jj) + " - " + lines[jj] + "\n";
+                }
+//                logger.info("@@@ \n ", dddd);
+                // 进行比对 - 按最小值算法
+                indexOfMinKeyReader = getMinimumFieldIndex(lines, separator, fieldIndex, comparator);
+                //logger.info("@@@ \n indexOfMinKeyReader：{}", indexOfMinKeyReader);
+                // 输出最小值行
+                if (indexOfMinKeyReader < 0) {
+                    break;
+                } else {
+                    writer.write(lines[indexOfMinKeyReader] + LINE_SEPARATOR);
+                    logger.info("\n处理计数：{}\n 各文件读取行：{} 输出文件索引：{} \n 输出行: {}",++lcount, dddd,indexOfMinKeyReader, lines[indexOfMinKeyReader]);
+                    // 准备下一次比较数据 - 从最小值行对应的文件中提取下一行
+                    line = done[indexOfMinKeyReader] ? null : readers.get(indexOfMinKeyReader).readLine();
+                    if (line != null) {
+                        lines[indexOfMinKeyReader] = line;
+                    } else {
+                        done[indexOfMinKeyReader] = true;
+                        doneCount++;
+                    }
+                }
+            }
+
+        } finally {
+            for(Iterator<BufferedReader> it= readers.iterator();it.hasNext();IOUtils.closeQuietly(it.next()));
+            IOUtils.closeQuietly(writer);
+        }
     }
 
+    /**
+     * 获取最小字段所在行索引
+     * @param lines
+     * @param separator
+     * @param fieldIndex
+     * @return
+     */
+    private static int getMinimumFieldIndex(String[] lines, String separator, int fieldIndex, Comparator<KeyValue> comparator) {
+        int minIndex = -1;
+        int count = lines.length;
+        KeyValue tmpKeyValue = null;
+        KeyValue minKeyValue = null;
+        String[] ls = null;
+        for (int i = 0; i < count; i++) {
+            ls = lines[i].split(separator);
+            tmpKeyValue = lines[i] != null ? new KeyValue(ls[fieldIndex], lines[i]) : null;
+            if (tmpKeyValue != null && minKeyValue != null) {
+                if (comparator.compare(minKeyValue, tmpKeyValue) > 0) {
+                    minKeyValue = tmpKeyValue;
+                    minIndex = i;
+                }
+            } else {
+                if (tmpKeyValue != null) {
+                    minKeyValue = tmpKeyValue;
+                    minIndex = i;
+                }
+            }
+        }
+
+        return minIndex;
+    }
 
 }
