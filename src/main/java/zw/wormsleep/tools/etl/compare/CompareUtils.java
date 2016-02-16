@@ -688,7 +688,7 @@ public class CompareUtils {
                     if (line != null) {
                         lines[indexOfMinKeyReader] = line;
                     } else {
-                        logger.info("@@@ 子文件 {} 读取完毕！", indexOfMinKeyReader);
+                        logger.info("@@@  子文件 {} 读取完毕！", indexOfMinKeyReader);
                         done[indexOfMinKeyReader] = true;
                         doneCount++;
                     }
