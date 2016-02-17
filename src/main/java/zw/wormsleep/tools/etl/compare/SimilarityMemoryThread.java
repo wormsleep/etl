@@ -14,7 +14,7 @@ import java.util.List;
 public class SimilarityMemoryThread extends Thread {
     final Logger logger = LoggerFactory.getLogger(SimilarityMemoryThread.class);
 
-    private final String DEFAULT_SEPARATOR = "\t";
+    private final String DEFAULT_SEPARATOR = "!@#";
     private final String DEFAULT_ENCODING = "UTF-8";
 
     private File f;

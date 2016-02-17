@@ -22,7 +22,7 @@ public class CompareUtils {
 
     private static final int BUFFER_SIZE = 10 * 1024 * 1024;
     private static final int COMPARE_SPLIT_LINE_SIZE = 5 * 1000;
-    private static final int SORT_SPLIT_LINE_SIZE = 20;
+    private static final int SORT_SPLIT_LINE_SIZE = 100 * 1000;
     private final static String SEPARATOR = "!@#";
     private final static String ENCODING = "UTF-8";
     private final static int LIMITED_LENGTH_SCOPE = 4;
@@ -104,22 +104,22 @@ public class CompareUtils {
      */
     protected static void similarity(File f, String fSeparator, String fEncoding, File s, String sSeparator, String sEncoding, Double threshold, File matched, String mSeparator, String mEncoding, SimilarityComparator comparator) {
         if (fSeparator == null) {
-            fSeparator = "\t";
+            fSeparator = SEPARATOR;
         }
         if (fEncoding == null) {
-            fEncoding = "UTF-8";
+            fEncoding = ENCODING;
         }
         if (sSeparator == null) {
-            sSeparator = "\t";
+            sSeparator = SEPARATOR;
         }
         if (sEncoding == null) {
-            sEncoding = "UTF-8";
+            sEncoding = ENCODING;
         }
         if (mSeparator == null) {
-            mSeparator = "\t";
+            mSeparator = SEPARATOR;
         }
         if (mEncoding == null) {
-            mEncoding = "UTF-8";
+            mEncoding = ENCODING;
         }
         if (comparator == null) {
             comparator = new JaroWinklerDistanceComparator(threshold);
@@ -571,6 +571,29 @@ public class CompareUtils {
         }
     }
 
+
+    public static void sortFile(File src, String separator, int fieldIndex) throws IOException {
+        sortFile(src, ENCODING, separator, fieldIndex, true, null, SORT_SPLIT_LINE_SIZE);
+    }
+
+    public static void sortFile(File src, String separator, int fieldIndex, boolean allowEmptyField) throws IOException {
+        sortFile(src, ENCODING, separator, fieldIndex, allowEmptyField, null, SORT_SPLIT_LINE_SIZE);
+    }
+
+    public static void sortFile(File src, String separator,
+                                int fieldIndex, boolean allowEmptyField,
+                                Comparator<KeyValue> comparator, int splitLineSize) throws IOException {
+        sortFile(src, ENCODING, separator, fieldIndex, allowEmptyField, comparator, splitLineSize);
+    }
+
+    public static void sortFile(File src, String encoding, String separator, int fieldIndex) throws IOException {
+        sortFile(src, encoding, separator, fieldIndex, true, null, SORT_SPLIT_LINE_SIZE);
+    }
+
+    public static void sortFile(File src, String encoding, String separator, int fieldIndex, boolean allowEmptyField) throws IOException {
+        sortFile(src, encoding, separator, fieldIndex, allowEmptyField, null, SORT_SPLIT_LINE_SIZE);
+    }
+
     /**
      * 对文件内容按指定域排序
      *
@@ -579,9 +602,12 @@ public class CompareUtils {
      * @param separator       域分隔符
      * @param fieldIndex      指定排序字段位置（从 0 开始）
      * @param allowEmptyField 是否过滤排序字段值为空的记录
+     * @param comparator      KeyValue 对象比较器
+     * @param splitLineSize   子文件分割最大行数
      */
-    public static void sortFile(File src, String encoding, String separator, int fieldIndex, boolean allowEmptyField,
-                                Comparator<KeyValue> comparator) throws IOException {
+    public static void sortFile(File src, String encoding, String separator,
+                                int fieldIndex, boolean allowEmptyField,
+                                Comparator<KeyValue> comparator, int splitLineSize) throws IOException {
 
         logger.info("@@@ 文件域排序开始……\n" +
                         "***********\n" +
@@ -599,7 +625,7 @@ public class CompareUtils {
                 allowEmptyField ? "是" : "否");
 
         // 比较器默认提供
-        comparator = comparator!= null ? comparator : new Comparator<KeyValue>() {
+        comparator = comparator != null ? comparator : new Comparator<KeyValue>() {
             @Override
             public int compare(KeyValue o1, KeyValue o2) {
                 return Collator.getInstance(Locale.CHINA).compare(o1.getKey(), o2.getKey());
@@ -607,7 +633,7 @@ public class CompareUtils {
         };
 
         // 分割文件
-        List<File> sfs = splitFile(src, encoding, SORT_SPLIT_LINE_SIZE);
+        List<File> sfs = splitFile(src, encoding, splitLineSize);
         // 排序文件 - 多线程排序分割文件
 
         ExecutorService pool = ThreadUtils.smartSortThreadPool(sfs.size(), 1);
@@ -648,7 +674,7 @@ public class CompareUtils {
             int count = sfs.size();
             String[] lines = new String[count];
             Boolean[] done = new Boolean[count];
-            for(int i=0;i<done.length;done[i]=false,i++);
+            for (int i = 0; i < done.length; done[i] = false, i++) ;
             int doneCount = 0;
             String line;
 
@@ -669,20 +695,14 @@ public class CompareUtils {
             // 循环退出条件 - 所有的文件都已经处理完毕（已按行读取完毕）
             while (doneCount < count) {
 
-                String dddd = "\n";
-                for(int jj=0;jj<count;jj++) {
-                    dddd += String.valueOf(jj) + " - " + lines[jj] + "\n";
-                }
-//                logger.info("@@@ \n ", dddd);
                 // 进行比对 - 按最小值算法
                 indexOfMinKeyReader = getMinimumFieldIndex(lines, separator, fieldIndex, comparator);
-                //logger.info("@@@ \n indexOfMinKeyReader：{}", indexOfMinKeyReader);
                 // 输出最小值行
                 if (indexOfMinKeyReader < 0) {
                     break;
                 } else {
                     writer.write(lines[indexOfMinKeyReader] + LINE_SEPARATOR);
-                    logger.info("\n处理计数：{}\n 各文件读取行：{} 输出文件索引：{} \n 输出行: {}\n", ++lcount, dddd, indexOfMinKeyReader, lines[indexOfMinKeyReader]);
+                    logger.debug("处理计数：{} 输出文件索引：{} 输出行: {}", ++lcount, indexOfMinKeyReader, lines[indexOfMinKeyReader]);
                     // 准备下一次比较数据 - 从最小值行对应的文件中提取下一行
                     line = done[indexOfMinKeyReader] ? null : readers.get(indexOfMinKeyReader).readLine();
                     lines[indexOfMinKeyReader] = line;
@@ -696,13 +716,14 @@ public class CompareUtils {
             }
 
         } finally {
-            for(Iterator<BufferedReader> it= readers.iterator();it.hasNext();IOUtils.closeQuietly(it.next()));
+            for (Iterator<BufferedReader> it = readers.iterator(); it.hasNext(); IOUtils.closeQuietly(it.next())) ;
             IOUtils.closeQuietly(writer);
         }
     }
 
     /**
      * 获取最小字段所在行索引
+     *
      * @param lines
      * @param separator
      * @param fieldIndex
@@ -715,8 +736,12 @@ public class CompareUtils {
         KeyValue minKeyValue = null;
         String[] ls = null;
         for (int i = 0; i < count; i++) {
-            ls = lines[i].split(separator);
-            tmpKeyValue = lines[i] != null ? new KeyValue(ls[fieldIndex], lines[i]) : null;
+            if (lines[i] != null) {
+                ls = lines[i].split(separator);
+                tmpKeyValue = new KeyValue(ls[fieldIndex], lines[i]);
+            } else {
+                tmpKeyValue = null;
+            }
             if (tmpKeyValue != null && minKeyValue != null) {
                 if (comparator.compare(minKeyValue, tmpKeyValue) > 0) {
                     minKeyValue = tmpKeyValue;
