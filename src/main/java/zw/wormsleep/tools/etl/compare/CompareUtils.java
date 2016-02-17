@@ -1,6 +1,5 @@
 package zw.wormsleep.tools.etl.compare;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -624,6 +623,8 @@ public class CompareUtils {
                 fieldIndex,
                 allowEmptyField ? "是" : "否");
 
+        long startTime = System.currentTimeMillis();
+
         // 比较器默认提供
         comparator = comparator != null ? comparator : new Comparator<KeyValue>() {
             @Override
@@ -702,7 +703,7 @@ public class CompareUtils {
                     break;
                 } else {
                     writer.write(lines[indexOfMinKeyReader] + LINE_SEPARATOR);
-                    logger.debug("处理计数：{} 输出文件索引：{} 输出行: {}", ++lcount, indexOfMinKeyReader, lines[indexOfMinKeyReader]);
+//                    logger.debug("处理计数：{} 输出文件索引：{} 输出行: {}", lcount, indexOfMinKeyReader, lines[indexOfMinKeyReader]);
                     // 准备下一次比较数据 - 从最小值行对应的文件中提取下一行
                     line = done[indexOfMinKeyReader] ? null : readers.get(indexOfMinKeyReader).readLine();
                     lines[indexOfMinKeyReader] = line;
@@ -713,7 +714,13 @@ public class CompareUtils {
                     }
 
                 }
+
+                lcount++;
             }
+
+            long endTime = System.currentTimeMillis();
+            long consuming = (endTime - startTime) / 1000;
+            logger.info("@@@ 文件域排序结束！\n总计：{} 行 - 耗时： {} ", lcount, (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟 (约为 " + String.valueOf(consuming % 60) + " 秒)");
 
         } finally {
             for (Iterator<BufferedReader> it = readers.iterator(); it.hasNext(); IOUtils.closeQuietly(it.next())) ;
