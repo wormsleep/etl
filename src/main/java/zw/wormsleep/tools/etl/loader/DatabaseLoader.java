@@ -146,15 +146,15 @@ public class DatabaseLoader implements ETLLoader {
                     pstmt.executeBatch();
                     conn.commit(); // 提交
                     pstmt.clearBatch();
-                    logger.info("已处理：" + lcnt + " 条");
+                    logger.info("已处理：{} 条 - ( {} )", lcnt, table);
                 }
 
             }
 
             pstmt.executeBatch();
             conn.commit(); // 提交
-            logger.info("已处理：" + lcnt + " 条");
-            logger.info("共计：" + lcnt + " 条");
+            logger.info("已处理：{} 条 - ( {} )", lcnt, table);
+            logger.info("共计：{} 条 - ( {} )", lcnt, table);
 
             long endTime = System.currentTimeMillis();
             long consuming = (endTime - startTime) / 1000;

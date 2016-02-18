@@ -27,6 +27,7 @@ public class ThreadUtils {
      */
     public static ExecutorService smartSortThreadPool(int fSize, int power) {
 //        Runtime.getRuntime().freeMemory();
-        return Executors.newCachedThreadPool();
+        return (Runtime.getRuntime().availableProcessors() * power > fSize) ? Executors.newCachedThreadPool() : Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * power);
+
     }
 }

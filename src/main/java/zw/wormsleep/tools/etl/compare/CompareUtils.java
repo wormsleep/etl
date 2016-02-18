@@ -637,7 +637,7 @@ public class CompareUtils {
         List<File> sfs = splitFile(src, encoding, splitLineSize);
         // 排序文件 - 多线程排序分割文件
 
-        ExecutorService pool = ThreadUtils.smartSortThreadPool(sfs.size(), 1);
+        ExecutorService pool = ThreadUtils.smartSortThreadPool(sfs.size(), POWER);
 
         for (Iterator<File> it = sfs.iterator(); it.hasNext(); ) {
             pool.execute(new SortSmallFileThread(it.next(), encoding, separator, fieldIndex, allowEmptyField, comparator));

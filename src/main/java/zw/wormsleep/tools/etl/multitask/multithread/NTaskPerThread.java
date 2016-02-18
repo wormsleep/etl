@@ -19,7 +19,7 @@ public class NTaskPerThread implements MultiTaskMultiThread {
     int taskCount;
     int threadCount;
     List<Task> tasks;
-    long total = 0; // 任务运行时间,用于比较不通线程数量的效率
+    long total = 0; // 任务运行时间,用于比较不同线程数量的效率
     Task task;
 
     public NTaskPerThread(List<Task> tasks, int threadCount) {
