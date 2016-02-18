@@ -1,4 +1,4 @@
-# hbgf项目Git忽略文件
+# Git忽略文件
 */.git/*
 */.svn/*
 *.DS_Store
