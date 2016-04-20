@@ -253,6 +253,7 @@ public class DatabaseHelper {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static List<Map<String, Object>> executeQuery(String sql,
                                                          Connection conn) {
+        logger.info("\nSQL:\n{}", sql);
         List resultSetList = new ArrayList();
 
         Statement stmt = null;

@@ -36,7 +36,7 @@ public class HierarchicalFileWalker {
 	 * @param key
 	 * @return
 	 */
-	protected boolean checkIfDirectory(String key) {
+	public boolean checkIfDirectory(String key) {
 		return false;
 	}
 	
@@ -53,7 +53,7 @@ public class HierarchicalFileWalker {
 	 * @param key
 	 * @return
 	 */
-	protected String getUpperKey(String key) {
+	public String getUpperKey(String key) {
 		return null;
 	}
 	
@@ -65,7 +65,7 @@ public class HierarchicalFileWalker {
 	 * @param value
 	 * @return
 	 */
-	protected String assembleBaseName(String key, String value) {
+	public String assembleBaseName(String key, String value) {
 		return value + "("+key+")";
 	}
 
@@ -78,7 +78,7 @@ public class HierarchicalFileWalker {
 	 * @param results
 	 * @return
 	 */
-	protected void handleDirectory(File directory, String key, String value,
+	public void handleDirectory(File directory, String key, String value,
 			@SuppressWarnings("rawtypes") Collection results) {
 	}
 
@@ -90,7 +90,7 @@ public class HierarchicalFileWalker {
 	 * @param value
 	 * @param results
 	 */
-	protected void handleFile(File file, String key, String value,
+	public void handleFile(File file, String key, String value,
 			@SuppressWarnings("rawtypes") Collection results) {
 	}
 
@@ -100,7 +100,7 @@ public class HierarchicalFileWalker {
 	 * @param hierarchical
 	 * @param results
 	 */
-	protected void walk(File startDirectory, LinkedMap hierarchical, @SuppressWarnings("rawtypes") Collection results) {
+	public void walk(File startDirectory, LinkedMap hierarchical, @SuppressWarnings("rawtypes") Collection results) {
 
 		try {
 			// 生成文件的起始目录
