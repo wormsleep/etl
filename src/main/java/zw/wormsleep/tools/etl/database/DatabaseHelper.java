@@ -602,7 +602,7 @@ public class DatabaseHelper {
             if (fields.get(key)) {
                 wherePart.append(key + "=:" + key + CONST_AND);
             }
-            if(updateFields.get(key)) {
+            if (updateFields.get(key)) {
                 updatePart.append(key + "=:" + key + COMMA);
             }
         }
@@ -1116,6 +1116,49 @@ public class DatabaseHelper {
 
         return result;
     }
+
+    /**
+     * 扫描数据库表元信息，并返回扫描结果列表
+     * @param database 数据库配置节点名
+     * @param catalog 目录
+     * @param schemaPattern 大纲匹配模式
+     * @param tableNamePattern 表名匹配模式
+     * @param types 表类型 （默认为 "TABLE"） table type. Typical types are "TABLE", "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY", "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
+     * @return
+     */
+    public static List<String> getTablesList(String database, String catalog, String schemaPattern, String tableNamePattern, String[] types) {
+
+        List<String> tables = new ArrayList<String>();
+
+        Connection conn = null;
+        ResultSet rs = null;
+        try {
+            // 获取数据库 - 连接对象
+            conn = ConnectionPool.getConnection(database, ConfigParserUtils.getDatabaseConfiguration(database));
+            // 元数据对象
+            DatabaseMetaData srcDatabaseMetaData = conn.getMetaData();
+            // 获取源数据库 - 表元数据
+            rs = srcDatabaseMetaData.getTables(
+                    (catalog != null && !catalog.trim().equals("")) ? catalog : null,
+                    (schemaPattern != null && !schemaPattern.trim().equals("")) ? schemaPattern : null,
+                    (tableNamePattern != null && !tableNamePattern.trim().equals("")) ? tableNamePattern : "%",
+                    (tableNamePattern != null) ? types : new String[]{"TABLE"}
+            );
+            while (rs.next()) {
+                tables.add(rs.getString(3));
+            }
+        } catch (ConfigurationException e) {
+            logger.error("配置异常 !", e);
+        } catch (PropertyVetoException e) {
+            logger.error("属性异常 !", e);
+        } catch (SQLException e) {
+            logger.error("SQL 异常 !", e);
+        }
+
+        return tables;
+
+    }
+
 
     /**
      * 获取表字段名集合

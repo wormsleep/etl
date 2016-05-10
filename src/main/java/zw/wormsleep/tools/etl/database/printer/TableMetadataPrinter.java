@@ -21,7 +21,7 @@ public class TableMetadataPrinter implements DatabaseMetadataPrinter {
 	private String[] types;
 
 	public TableMetadataPrinter(String catalog, String schemaPattern,
-			String tableNamePattern, String columnNamePattern, String[] types) {
+			String tableNamePattern, String[] types) {
 		this.catalog = catalog;
 		this.schemaPattern = schemaPattern;
 		this.tableNamePattern = tableNamePattern;
