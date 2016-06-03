@@ -29,6 +29,8 @@
 			<table>table name</table>
 			<batchsize>200 ( 默认: 200 )</batchsize>
 			<ignoreupdate>默认值：false - 是否在 if exists update insert 语句中执行 update（实际处理是通过 update table set key=:key where 1=0 达到该效果）</ignoreupdate>
+			<tabletotable>默认值：false - 是否为表对表拷贝。（可以省略）</tabletotable>
+			<selectsql><![CDATA[ SELECT 1 ]]> SQL语句。用以简化加载表字段的结构化获取，优先级低于 columns 节点字段配置。（可以省略）例如：<![CDATA[ SELECT C1,C2... FROM TABLE WHERE 1=0 ]]></selectsql>
 		</output>
 		<!-- 输出地 - 文件 -->
 		<output type="file">

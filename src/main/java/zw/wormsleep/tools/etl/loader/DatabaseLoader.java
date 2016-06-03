@@ -44,17 +44,20 @@ public class DatabaseLoader implements ETLLoader {
         Map<String, Boolean> fields = loadConfig.getFields();
         Map<String, Boolean> updateFields = loadConfig.getUpdateFields();
         boolean ignoreUpdate = loadConfig.ignoreUpdate();
-        String selectSQL = "";
-        boolean isTable2Table = fields.size() < 1 ? true : false;
-        if (isTable2Table) { // 对于未定义导入列，即表对表拷贝时
+        String selectSQL = loadConfig.getSelectSQL();
+        boolean isTable2Table = loadConfig.tableToTable();
+        if (isTable2Table) {
             selectSQL = "select * from " + table + " where 1=0 ";
             logger.info("@@@ 表对表拷贝...");
-        } else { // 对于已定义导入列情况
-            selectSQL = DatabaseHelper.getSelectSQL(table, fields);
+        } else {
+            // 若存在字段定义，则按定义处理，反之按 selectSQL 处理
+            if (fields.size() > 0) {
+                selectSQL = DatabaseHelper.getSelectSQL(table, fields);
+            }
         }
         boolean truncateTableBeforeLoad = loadConfig.truncateTableBeforeLoad();
 
-        logger.info("@@@ Select SQL: {}", selectSQL);
+        logger.info("@@@ 目的表 Select SQL: {}", selectSQL);
 
         try {
             // 连接数据库

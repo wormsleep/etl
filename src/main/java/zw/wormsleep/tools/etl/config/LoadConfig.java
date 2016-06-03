@@ -25,4 +25,6 @@ public interface LoadConfig {
 	int getBatchSize(); // 批量处理数  ( 数据库 )
 	boolean truncateTableBeforeLoad(); // 导入数据库前是否先清除表数据
 	boolean ignoreUpdate(); // 导入数据库时是否在 if exists update else insert 语句中忽略 update 操作
+	boolean tableToTable(); // 是否表对表拷贝。即是否在采集时先将目标表进行 truncate 处理
+	String getSelectSQL(); // 获取加载表字段结构的 select 语句。注意必须在语句尾加上 where 1=0 以仅抓取结构
 }

@@ -36,6 +36,8 @@ public class SimpleLoadConfig implements LoadConfig {
     final String NODE_OUTPUT_TEMPLATE_COLLECTION = "templatecollection";
     final String NODE_OUTPUT_TRUNCATE_TABLE_BEFORE_LOAD = "output.truncatetablebeforeload";
     final String NODE_OUTPUT_IGNORE_UPDATE = "output.ignoreupdate";
+    final String NODE_OUTPUT_TABLE_TO_TABLE = "output.tabletotable";
+    final String NODE_OUTPUT_NODE_OUTPUT_SELECT_SQL = "output.selectsql";
 
     private HierarchicalConfiguration business;
     private Map<String, String> database;
@@ -191,6 +193,16 @@ public class SimpleLoadConfig implements LoadConfig {
     @Override
     public boolean ignoreUpdate() {
         return business.getBoolean(NODE_OUTPUT_IGNORE_UPDATE, false);
+    }
+
+    @Override
+    public boolean tableToTable() {
+        return business.getBoolean(NODE_OUTPUT_TABLE_TO_TABLE, false);
+    }
+
+    @Override
+    public String getSelectSQL() {
+        return business.getString(NODE_OUTPUT_NODE_OUTPUT_SELECT_SQL);
     }
 
     @Override
