@@ -47,6 +47,35 @@ public class ConfigParserUtils {
     }
 
     /**
+     * 是否存在指定节点。
+     * 注意该节点必须有值
+     * @param key
+     * @param configuration
+     * @return
+     */
+    public static boolean containsKey(String key, File configuration) {
+        try {
+            XMLConfiguration config = new XMLConfiguration(configuration);
+
+            return config.containsKey(key);
+        } catch (ConfigurationException e) {
+            return false;
+        }
+
+    }
+
+    /**
+     * 是否存在指定节点
+     * 注意该节点必须有值
+     * @param key
+     * @return
+     */
+    public static boolean containsKey(String key) {
+        return containsKey(key, getDefaultConfigurationFile());
+
+    }
+
+    /**
      * 获取指定数据库 c3p0 配置对象信息
      *
      * @param database
