@@ -1,6 +1,7 @@
 package zw.wormsleep.tools.etl.config;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,7 @@ public class SimpleLoadConfig implements LoadConfig {
 
     private HierarchicalConfiguration business;
     private Map<String, String> database;
+    private Map<String, Boolean> keyFields = new HashMap<String, Boolean>();
 
     public SimpleLoadConfig(String businessType) throws ConfigurationException {
         business = ConfigParserUtils.getResourceConfiguration(businessType);
@@ -67,6 +69,7 @@ public class SimpleLoadConfig implements LoadConfig {
 
             if (key != null && key.equalsIgnoreCase("true")) {
                 fields.put(field, true);
+                keyFields.put(field, true);
             } else {
                 fields.put(field, false);
             }
@@ -74,6 +77,11 @@ public class SimpleLoadConfig implements LoadConfig {
         }
 
         return fields;
+    }
+
+    @Override
+    public Map<String, Boolean> getKeyFields() {
+        return keyFields;
     }
 
     @Override

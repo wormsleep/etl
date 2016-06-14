@@ -42,6 +42,7 @@ public class DatabaseLoader implements ETLLoader {
         Map<String, String> poolConfig = loadConfig.getDatabaseConfiguration();
         String table = loadConfig.getTable();
         Map<String, Boolean> fields = loadConfig.getFields();
+        Map<String, Boolean> keyFields = loadConfig.getKeyFields();
         Map<String, Boolean> updateFields = loadConfig.getUpdateFields();
         boolean ignoreUpdate = loadConfig.ignoreUpdate();
         String selectSQL = loadConfig.getSelectSQL();

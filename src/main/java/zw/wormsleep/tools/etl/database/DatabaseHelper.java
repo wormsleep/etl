@@ -488,7 +488,7 @@ public class DatabaseHelper {
     /**
      * 获取批量插入语句（根据数据库类型）
      *
-     * @param dbType 数据库类型 ( sybase oracle mysql ... )
+     * @param dbType 数据库类型 ( sybase oracle mysql ... ) 若为 NULL 值则按默认处理
      * @param table  表名
      * @param fields 字段 ( 主键值 true )
      * @return
