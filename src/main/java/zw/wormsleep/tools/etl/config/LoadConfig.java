@@ -1,11 +1,11 @@
 package zw.wormsleep.tools.etl.config;
 
+import java.util.List;
 import java.util.Map;
 
 public interface LoadConfig {
 	Map<String, Boolean> getFields(); // 目标输出加载字段集合
-	Map<String, Boolean> getKeyFields(); // 目标输出加载主键字段集合
-	Map<String, Boolean> getUpdateFields(); // 目标输出加载更新字段集合
+	List<String> getUpdateFields(); // 目标输出加载更新字段集合
 	String getOutputType(); // 目标输出类型
 	String getDatabase(); // 目标数据库节点名称
 	String getDatabaseType(); // 目标数据库类型
@@ -27,5 +27,7 @@ public interface LoadConfig {
 	boolean truncateTableBeforeLoad(); // 导入数据库前是否先清除表数据
 	boolean ignoreUpdate(); // 导入数据库时是否在 if exists update else insert 语句中忽略 update 操作
 	boolean tableToTable(); // 是否表对表拷贝。即是否在采集时先将目标表进行 truncate 处理
-	String getSelectSQL(); // 获取加载表字段结构的 select 语句。注意必须在语句尾加上 where 1=0 以仅抓取结构
+	String getSelectSQL(); // 获取目标表字段结构的 select 语句。注意必须在语句尾加上 where 1=0 以仅抓取结构
+    List<String> getKeyFields(); // 获取目标表主键字段集合
+    List<String> getNonUpdateFields(); // 获取目的表不需要更新字段集合
 }

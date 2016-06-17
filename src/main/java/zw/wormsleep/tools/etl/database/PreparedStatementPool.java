@@ -8,6 +8,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,7 +48,7 @@ public class PreparedStatementPool {
         Map<String, String> poolConfig = loadConfig.getDatabaseConfiguration();
         String table = loadConfig.getTable();
         Map<String, Boolean> fields = loadConfig.getFields();
-        Map<String, Boolean> updateFields = loadConfig.getUpdateFields();
+        List<String> updateFields = loadConfig.getUpdateFields();
         boolean ignoreUpdate = loadConfig.ignoreUpdate();
         String selectSQL = "";
         boolean isTable2Table = fields.size() < 1 ? true : false;
@@ -55,7 +56,7 @@ public class PreparedStatementPool {
             selectSQL = "select * from " + table;
             logger.info("@@@ 表对表拷贝...");
         } else { // 对于已定义导入列情况
-            selectSQL = DatabaseHelper.getSelectSQL(table, fields);
+            selectSQL = DatabaseHelper.getLoaderSelectSQL(table, fields);
         }
 
         logger.debug("@@@ Select SQL: {}", selectSQL);

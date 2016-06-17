@@ -1,10 +1,7 @@
 package zw.wormsleep.tools.etl.config;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -39,10 +36,14 @@ public class SimpleLoadConfig implements LoadConfig {
     final String NODE_OUTPUT_IGNORE_UPDATE = "output.ignoreupdate";
     final String NODE_OUTPUT_TABLE_TO_TABLE = "output.tabletotable";
     final String NODE_OUTPUT_NODE_OUTPUT_SELECT_SQL = "output.selectsql";
+    final String NODE_OUTPUT_NODE_OUTPUT_KEY_FIELDS = "output.keyfields";
+    final String NODE_OUTPUT_NODE_OUTPUT_NON_UPDATE_FIELDS = "output.nonupdatefields";
 
     private HierarchicalConfiguration business;
     private Map<String, String> database;
-    private Map<String, Boolean> keyFields = new HashMap<String, Boolean>();
+    private Map<String, Boolean> fields; // 目标表列若为主键值为 true
+    private List<String> keyFields = new ArrayList<String>();
+    private List<String> nonUpdateFields = new ArrayList<String>();
 
     public SimpleLoadConfig(String businessType) throws ConfigurationException {
         business = ConfigParserUtils.getResourceConfiguration(businessType);
@@ -69,7 +70,6 @@ public class SimpleLoadConfig implements LoadConfig {
 
             if (key != null && key.equalsIgnoreCase("true")) {
                 fields.put(field, true);
-                keyFields.put(field, true);
             } else {
                 fields.put(field, false);
             }
@@ -80,13 +80,8 @@ public class SimpleLoadConfig implements LoadConfig {
     }
 
     @Override
-    public Map<String, Boolean> getKeyFields() {
-        return keyFields;
-    }
-
-    @Override
-    public Map<String, Boolean> getUpdateFields() {
-        Map<String, Boolean> updateFields = new LinkedHashMap<String, Boolean>();
+    public List<String> getUpdateFields() {
+        List<String> updateFields = new ArrayList<String>();
 
         List<HierarchicalConfiguration> columns = ConfigParserUtils
                 .getColumnConfiguration(business);
@@ -96,9 +91,7 @@ public class SimpleLoadConfig implements LoadConfig {
             String update = column.getString(PROP_UPDATE);
 
             if (update != null && update.equalsIgnoreCase("false")) {
-                updateFields.put(field, false);
-            } else {
-                updateFields.put(field, true);
+                updateFields.add(field);
             }
 
         }
@@ -210,7 +203,35 @@ public class SimpleLoadConfig implements LoadConfig {
 
     @Override
     public String getSelectSQL() {
-        return business.getString(NODE_OUTPUT_NODE_OUTPUT_SELECT_SQL);
+        return business.getString(NODE_OUTPUT_NODE_OUTPUT_SELECT_SQL, null);
+    }
+
+    @Override
+    public List<String> getKeyFields() {
+        List<String> result = new ArrayList<String>();
+
+        List<Object> kfs = business.getList(NODE_OUTPUT_NODE_OUTPUT_KEY_FIELDS);
+        if (kfs.size() > 0) {
+            for (Object key : kfs) {
+                result.add((String) key);
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<String> getNonUpdateFields() {
+        List<String> result = new ArrayList<String>();
+
+        List<Object> kfs = business.getList(NODE_OUTPUT_NODE_OUTPUT_NON_UPDATE_FIELDS);
+        if (kfs.size() > 0) {
+            for (Object key : kfs) {
+                result.add((String) key);
+            }
+        }
+
+        return result;
     }
 
     @Override

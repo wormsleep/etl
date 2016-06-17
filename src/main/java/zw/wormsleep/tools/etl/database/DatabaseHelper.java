@@ -495,7 +495,7 @@ public class DatabaseHelper {
      */
     public static String getBatchInsertSQL(String dbType, String table,
                                            Map<String, Boolean> fields,
-                                           Map<String, Boolean> updateFields,
+                                           List<String> updateFields,
                                            boolean ignoreUpdate) {
         String batchInsertSQL = null;
 
@@ -523,7 +523,7 @@ public class DatabaseHelper {
      * @param fields 字段 ( 主键值 true )
      * @return
      */
-    public static String getSelectSQL(String table, Map<String, Boolean> fields) {
+    public static String getLoaderSelectSQL(String table, Map<String, Boolean> fields) {
         StringBuffer sql = new StringBuffer();
         StringBuffer fieldsPart = new StringBuffer();
         sql.append("select ");
@@ -533,6 +533,49 @@ public class DatabaseHelper {
         sql.append(fieldsPart.substring(0, fieldsPart.length() - 1));
         sql.append(" from ");
         sql.append(table);
+        sql.append(" where 1=0 ");
+        return sql.toString();
+    }
+
+    /**
+     * 通过预定义字段获取 Select SQL 供后期获取这些字段对应的数据库字段类型
+     *
+     * @param table  表名
+     * @param fields 字段
+     * @return
+     */
+    public static String getLoaderSelectSQL(String table, List<String> fields) {
+        StringBuffer sql = new StringBuffer();
+        StringBuffer fieldsPart = new StringBuffer();
+        sql.append("\nselect ");
+        for (String field : fields) {
+            fieldsPart.append(field + "\n,");
+        }
+        sql.append(fieldsPart.substring(0, fieldsPart.length() - 1));
+        sql.append(" from ");
+        sql.append(table + "\n");
+        sql.append(" where 1=0 ");
+        return sql.toString();
+    }
+
+    /**
+     * 通过预定义字段获取 Select SQL 供后期获取这些字段对应的数据库字段类型
+     *
+     * @param table  表名
+     * @param fields 字段
+     * @return
+     */
+    public static String getLoaderSelectSQL(String table, List<String> fields, List<String> excludeFields) {
+        StringBuffer sql = new StringBuffer();
+        StringBuffer fieldsPart = new StringBuffer();
+        sql.append("\nselect ");
+        for (String field : fields) {
+            if(!excludeFields.contains(field))
+                fieldsPart.append(field + "\n,");
+        }
+        sql.append(fieldsPart.substring(0, fieldsPart.length() - 1));
+        sql.append(" from ");
+        sql.append(table + "\n");
         sql.append(" where 1=0 ");
         return sql.toString();
     }
@@ -586,7 +629,7 @@ public class DatabaseHelper {
      */
     public static String assembleSybaseBatchInsertSQL(String table,
                                                       Map<String, Boolean> fields,
-                                                      Map<String, Boolean> updateFields,
+                                                      List<String> updateFields,
                                                       boolean ignoreUpdate) {
         StringBuffer sql = new StringBuffer();
         StringBuffer fieldsPart = new StringBuffer();
@@ -602,7 +645,7 @@ public class DatabaseHelper {
             if (fields.get(key)) {
                 wherePart.append(key + "=:" + key + CONST_AND);
             }
-            if (updateFields.get(key)) {
+            if (updateFields.contains(key)) {
                 updatePart.append(key + "=:" + key + COMMA);
             }
         }

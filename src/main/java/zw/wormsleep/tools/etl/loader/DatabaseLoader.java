@@ -11,9 +11,7 @@ import zw.wormsleep.tools.etl.database.DatabaseHelper;
 
 import java.beans.PropertyVetoException;
 import java.sql.*;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,11 +39,41 @@ public class DatabaseLoader implements ETLLoader {
         String database = loadConfig.getDatabase();
         Map<String, String> poolConfig = loadConfig.getDatabaseConfiguration();
         String table = loadConfig.getTable();
+
+        /**
+         * 关于目标表字段生成的处理需要说明下
+         * 1. 为了兼容目标表字段的配置化和简化处理
+         * 2. 若采用配置化（即在 columns 节点下配置 column 子节点）可以直接按配置生成 fields、updatefields
+         * 3. 若采用简化（即在 output 节点下配置 selectsql keyfields nonupdatefields 子节点）就需要通用数据库元数据间接生成 fiedls、updatefields
+         *
+         * 通过数据库元数据生成 fields、updatefields 步骤
+         * 1. 通过 selectSQL 在语句末尾添加 and 1=0 获取目标表字段元数据信息
+         * 2. 通过元数据同时结合 keyfields 和 nonupdatefields 列表生成 fields、updatefields
+         */
         Map<String, Boolean> fields = loadConfig.getFields();
-        Map<String, Boolean> keyFields = loadConfig.getKeyFields();
-        Map<String, Boolean> updateFields = loadConfig.getUpdateFields();
+
         boolean ignoreUpdate = loadConfig.ignoreUpdate();
+
+
+
+        /**
+         * selectSQL 的获取或生成判断流程
+         *
+         * 1. 若配置中指定为表对表拷贝，则默认生成
+         * 2. 若配置中已定义 <columns>...</columns> 则按配置生成
+         * 3. 若无配置则通过根据 selectSQL 生成
+         *
+          */
         String selectSQL = loadConfig.getSelectSQL();
+
+        // 防呆设计 - 在语句末尾添加 and 1=0
+        if (selectSQL != null) {
+            selectSQL += " and 1=0";
+        }
+
+        // 是否需要通过 selectSQL 生成 fields
+        boolean makeFieldsFromSelectSQL = (selectSQL != null && fields.size() == 0) ? true : false;
+
         boolean isTable2Table = loadConfig.tableToTable();
         if (isTable2Table) {
             selectSQL = "select * from " + table + " where 1=0 ";
@@ -53,10 +81,12 @@ public class DatabaseLoader implements ETLLoader {
         } else {
             // 若存在字段定义，则按定义处理，反之按 selectSQL 处理
             if (fields.size() > 0) {
-                selectSQL = DatabaseHelper.getSelectSQL(table, fields);
+                selectSQL = DatabaseHelper.getLoaderSelectSQL(table, fields);
             }
         }
+        // 是否需要在采集前清空目标表
         boolean truncateTableBeforeLoad = loadConfig.truncateTableBeforeLoad();
+
 
         logger.info("@@@ 目的表 Select SQL: {}", selectSQL);
 
@@ -77,23 +107,37 @@ public class DatabaseLoader implements ETLLoader {
             rs = stmt.executeQuery(selectSQL);
             ResultSetMetaData rsd = rs.getMetaData();
             int columnCount = rsd.getColumnCount();
+            Map<String, Boolean> _fields = new HashMap<String, Boolean>();
             for (int i = 1; i <= columnCount; i++) {
                 types.put(rsd.getColumnLabel(i), rsd.getColumnType(i));
+                // 若需要通过 selectSQL 生成 fields ，后面结合 keyFields 对象更新主键字段
+                if (makeFieldsFromSelectSQL) {
+                    _fields.put(rsd.getColumnLabel(i), false);
+                }
                 logger.debug("@@@ 序号 {} 表 {} 字段 {} 类型 {}", i, table,
                         rsd.getColumnLabel(i), rsd.getColumnType(i));
             }
 
-            // 获取参数集合
-            // *** 若进行表对表拷贝
-            if (isTable2Table) {
-                fields = new HashMap<String, Boolean>();
-                for (String field : types.keySet()) {
-                    fields.put(field, false);
+            // 组装批量提交 SQL 语句。若字段是通过 selectSQL 生成的，需要更新主键字段信息
+            List<String> keyFields = loadConfig.getKeyFields();
+            List<String> nonUpdateFields = loadConfig.getNonUpdateFields();
+            List<String> updateFields = loadConfig.getUpdateFields();
+
+            if (makeFieldsFromSelectSQL) {
+                for (String field : _fields.keySet()) {
+                    if (keyFields.contains(field)) {
+                        _fields.put(field, true);
+                    }
+                    if (!nonUpdateFields.contains(field)) {
+                        updateFields.add(field);
+                    }
                 }
+            } else {
+                _fields = fields;
             }
 
             String sql = DatabaseHelper
-                    .getBatchInsertSQL((isTable2Table ? null : dbType), table, fields, updateFields, ignoreUpdate);
+                    .getBatchInsertSQL((isTable2Table ? null : dbType), table, _fields, updateFields, ignoreUpdate);
             logger.info("@@@ Insert SQL - 预处理 {} ", sql);
             // *****************
             // if(true) return;
