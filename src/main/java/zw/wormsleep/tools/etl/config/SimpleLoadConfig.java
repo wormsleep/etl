@@ -91,6 +91,8 @@ public class SimpleLoadConfig implements LoadConfig {
             String update = column.getString(PROP_UPDATE);
 
             if (update != null && update.equalsIgnoreCase("false")) {
+                continue;
+            } else {
                 updateFields.add(field);
             }
 
