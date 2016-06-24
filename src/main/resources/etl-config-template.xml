@@ -376,14 +376,14 @@
 			<jdbcUrl>jdbc:sybase:Tds:IP:PORT/DATABASE?charset=cp936&amp;jconnect_version=0&amp;language=us_english&amp;DYNAMIC_PREPARE=true</jdbcUrl> 
 			<user>sa</user>
 			<password></password>
-			
+
 			<initialPoolSize>5</initialPoolSize>
-			<minPoolSize>5</minPoolSize>
-			<maxPoolSize>10</maxPoolSize>
+			<minPoolSize>3</minPoolSize>
+			<maxPoolSize>120</maxPoolSize>
 			<checkoutTimeout>10000</checkoutTimeout>
-			<maxIdleTime>1800</maxIdleTime>
-			<idleConnectionTestPeriod>3000</idleConnectionTestPeriod>
-			<acquireIncrement>5</acquireIncrement>
+			<maxIdleTime>3600</maxIdleTime>
+			<idleConnectionTestPeriod>3600</idleConnectionTestPeriod>
+			<acquireIncrement>3</acquireIncrement>
 			<acquireRetryAttempts>3</acquireRetryAttempts>
 			<preferredTestQuery>SELECT 1</preferredTestQuery>
 		</res>
@@ -397,14 +397,13 @@
 			<password></password>
 			
 			<initialPoolSize>5</initialPoolSize>
-			<minPoolSize>5</minPoolSize>
-			<maxPoolSize>10</maxPoolSize>
+			<minPoolSize>3</minPoolSize>
+			<maxPoolSize>120</maxPoolSize>
 			<checkoutTimeout>10000</checkoutTimeout>
-			<maxIdleTime>1800</maxIdleTime>
-			<idleConnectionTestPeriod>3000</idleConnectionTestPeriod>
-			<acquireIncrement>5</acquireIncrement>
+			<maxIdleTime>3600</maxIdleTime>
+			<idleConnectionTestPeriod>3600</idleConnectionTestPeriod>
+			<acquireIncrement>3</acquireIncrement>
 			<acquireRetryAttempts>3</acquireRetryAttempts>
-			<testConnectionOnCheckout>true</testConnectionOnCheckout>
 			<preferredTestQuery>SELECT 1</preferredTestQuery>
 		</dest>
 	</database>

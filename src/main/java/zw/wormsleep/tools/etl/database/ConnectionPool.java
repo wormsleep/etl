@@ -37,6 +37,8 @@ public class ConnectionPool {
     static final String IDLE_CONNECTION_TEST_PERIOD = "idleConnectionTestPeriod";
     // 当连接池用完时客户端等待获取新连接的时间，超时后将抛出 SQLException （默认值：0 毫秒。表示无限等待）
     static final String CHECKOUT_TIMEOUT = "checkoutTimeout";
+    // 最大空闲时间,多少秒内未使用则连接被丢弃。（默认值：0 表示永不丢弃）
+    static final String MAX_IDLE_TIME = "maxIdleTime";
     // 测试连接的语句，若不设置则通过 getTables() 获取 MetaData 其速度将远慢于设定该语句的情况。（默认值：null）（推荐设置）
     static final String PREFERRED_TEST_QUERY = "preferredTestQuery";
 
@@ -70,6 +72,8 @@ public class ConnectionPool {
             cpds.setAcquireRetryAttempts(Integer.valueOf(poolConfig.get(ACQUIRE_RETRY_DELAY)));
         if (poolConfig.get(IDLE_CONNECTION_TEST_PERIOD) != null)
             cpds.setIdleConnectionTestPeriod(Integer.valueOf(poolConfig.get(IDLE_CONNECTION_TEST_PERIOD)));
+        if (poolConfig.get(MAX_IDLE_TIME) != null)
+            cpds.setMaxIdleTime(Integer.valueOf(poolConfig.get(MAX_IDLE_TIME)));
         if (poolConfig.get(CHECKOUT_TIMEOUT) != null)
             cpds.setCheckoutTimeout(Integer.valueOf(poolConfig.get(CHECKOUT_TIMEOUT)));
         if (poolConfig.get(NUM_HELPER_THREADS) != null)
@@ -91,7 +95,7 @@ public class ConnectionPool {
             pool.put(database, cpds);
         }
 
-        logger.info("@@@ 数据库节点：{} 从连接池获取连接成功！\n" +
+        logger.debug("@@@ 数据库节点：{} 从连接池获取连接成功！\n" +
                 "连接池状态 - 总连接数：{} - 使用：{} - 空闲：{}",
                 database, cpds.getNumConnections(), cpds.getNumBusyConnections(), cpds.getNumIdleConnections());
 
