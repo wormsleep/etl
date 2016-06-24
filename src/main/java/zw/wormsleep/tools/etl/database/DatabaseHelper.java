@@ -813,7 +813,6 @@ public class DatabaseHelper {
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(true);
                     conn.close();
                     conn = null;
                 } catch (SQLException e) {
@@ -943,9 +942,17 @@ public class DatabaseHelper {
         } catch (ClassNotFoundException e) {
             logger.error("类未找到异常 !", e);
         } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                    rs = null;
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+
             if (srcConn != null) {
                 try {
-                    srcConn.setAutoCommit(true);
                     srcConn.close();
                     srcConn = null;
                 } catch (SQLException e) {
@@ -955,13 +962,13 @@ public class DatabaseHelper {
 
             if (destConn != null) {
                 try {
-                    destConn.setAutoCommit(true);
                     destConn.close();
                     destConn = null;
                 } catch (SQLException e) {
                     logger.error("SQL 异常 !", e);
                 }
             }
+
         }
     }
 
@@ -1075,6 +1082,24 @@ public class DatabaseHelper {
             logger.error("属性异常 !", e);
         } catch (SQLException e) {
             logger.error("SQL 异常 !", e);
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                    rs = null;
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (conn != null) {
+                try {
+                    conn.close();
+                    conn = null;
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
 
@@ -1196,6 +1221,26 @@ public class DatabaseHelper {
             logger.error("属性异常 !", e);
         } catch (SQLException e) {
             logger.error("SQL 异常 !", e);
+        } finally {
+
+            if (rs != null) {
+                try {
+                    rs.close();
+                    rs = null;
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (conn != null) {
+                try {
+                    conn.close();
+                    conn = null;
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+
         }
 
         return tables;
