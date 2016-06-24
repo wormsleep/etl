@@ -385,7 +385,6 @@
 			<idleConnectionTestPeriod>3000</idleConnectionTestPeriod>
 			<acquireIncrement>5</acquireIncrement>
 			<acquireRetryAttempts>3</acquireRetryAttempts>
-			<testConnectionOnCheckout>true</testConnectionOnCheckout>
 			<preferredTestQuery>SELECT 1</preferredTestQuery>
 		</res>
 		
