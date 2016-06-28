@@ -1247,6 +1247,70 @@ public class DatabaseHelper {
 
     }
 
+    /**
+     * 通过 SQL 获取字段类型
+     * @param database
+     * @param sql
+     * @return
+     */
+    public static Map<String, Integer> getColumnsType(String database, String sql, boolean toLowerCase) {
+        Map<String, Integer> columnsType = new LinkedHashMap<String, Integer>();
+
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = ConnectionPool.getConnection(database, ConfigParserUtils.getDatabaseConfiguration(database));
+            stmt = conn.createStatement();
+            // 由于不需要对结果集内容进行处理, 而仅对结果集的元数据进行处理, 因此设定该值为 1
+            stmt.setFetchSize(1);
+            rs = stmt.executeQuery(sql);
+
+            ResultSetMetaData rsmd = rs.getMetaData();
+            int columnCount = rsmd.getColumnCount();
+            for (int i = 1; i < columnCount + 1; i++) {
+                columnsType.put(toLowerCase ? rsmd.getColumnLabel(i).toLowerCase() : rsmd.getColumnLabel(i), rsmd.getColumnType(i));
+            }
+
+        } catch (ConfigurationException e) {
+            logger.error("配置异常 !", e);
+        } catch (PropertyVetoException e) {
+            logger.error("属性异常 !", e);
+        } catch (SQLException e) {
+            logger.error("SQL 异常 !", e);
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                    rs = null;
+                } catch (SQLException e) {
+                    logger.error("SQL 异常 !", e);
+                }
+            }
+
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                    stmt = null;
+                } catch (SQLException e) {
+                    logger.error("SQL 异常 !", e);
+                }
+            }
+
+            if (conn != null) {
+                try {
+                    conn.close();
+                    conn = null;
+                } catch (SQLException e) {
+                    logger.error("SQL 异常 !", e);
+                }
+            }
+        }
+
+        return columnsType;
+    }
+
 
     /**
      * 获取表字段名集合
@@ -1267,7 +1331,7 @@ public class DatabaseHelper {
             stmt = conn.createStatement();
             // 由于不需要对结果集内容进行处理, 而仅对结果集的元数据进行处理, 因此设定该值为 1
             stmt.setFetchSize(1);
-            String sql = "select * from " + tableName;
+            String sql = "select * from " + tableName + " where 1=0";
             rs = stmt.executeQuery(sql);
 
             ResultSetMetaData rsmd = rs.getMetaData();
