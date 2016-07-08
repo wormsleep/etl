@@ -95,7 +95,7 @@ public class ConnectionPool {
             pool.put(database, cpds);
         }
 
-        logger.debug("@@@ 数据库节点：{} 从连接池获取连接成功！\n" +
+        logger.info("@@@ 数据库节点：{} 从连接池获取连接成功！\n" +
                 "连接池状态 - 总连接数：{} - 使用：{} - 空闲：{}",
                 database, cpds.getNumConnections(), cpds.getNumBusyConnections(), cpds.getNumIdleConnections());
 

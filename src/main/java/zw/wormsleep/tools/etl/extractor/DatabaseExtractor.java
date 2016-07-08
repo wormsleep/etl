@@ -62,12 +62,12 @@ public class DatabaseExtractor implements ETLExtractor {
 		} else {
 			if (sql == null) {
 				sql = extractConfig.getSQL();
-				logger.debug("@@@ Config SQL: \n {}", sql);
+				logger.info("@@@ Config SQL: \n {}", sql);
 				sql = DatabaseHelper.getReplacedSQL(sql, parameters);
 			}
 		}
 
-		logger.debug("@@@ Parsed SQL: \n {}", sql);
+		logger.info("@@@ Parsed SQL: \n {}", sql);
 
 		String database = extractConfig.getDatabase();
 		Map<String, String> poolConfig = extractConfig

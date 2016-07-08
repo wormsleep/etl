@@ -253,7 +253,7 @@ public class DatabaseHelper {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static List<Map<String, Object>> executeQuery(String sql,
                                                          Connection conn) {
-        logger.info("\nSQL:\n{}", sql);
+        logger.info("@@@ Execute Query\nSQL:\n{}", sql);
         List resultSetList = new ArrayList();
 
         Statement stmt = null;
@@ -393,7 +393,7 @@ public class DatabaseHelper {
 
         try {
             stat = conn.createStatement();
-            logger.debug("@@@ Execute Update - SQL\nSQL: \n{}", sql);
+            logger.info("@@@ Execute Update\nSQL: \n{}", sql);
             result = stat.executeUpdate(sql);
         } catch (SQLException e) {
             logger.error("SQL 异常 !", e);
@@ -462,11 +462,11 @@ public class DatabaseHelper {
 
         try {
             stat = conn.createStatement();
-
+            logger.info("@@@ Execute Update Batch\nSQLS: \n{}", sqls);
             for (String sql : sqls) {
                 stat.addBatch(sql);
-                logger.debug("@@@ Execute Update - SQL\nSQL: \n{}", sql);
             }
+
 
             result = stat.executeBatch();
         } catch (SQLException e) {
