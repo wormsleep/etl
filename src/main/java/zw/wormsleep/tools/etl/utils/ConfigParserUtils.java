@@ -31,9 +31,7 @@ public class ConfigParserUtils {
     public static File getDefaultConfigurationFile() {
         try {
             XMLConfiguration configuration = new XMLConfiguration(DEFAULT_CONFIG_FILENAME);
-            String path = configuration.getBasePath();
-            logger.debug("@@@ load default configuration file: {}", path);
-            return new File(path);
+            return configuration.getFile();
         } catch (ConfigurationException e) {
             logger.error("@@@ 未找到配置文件！", e);
         }
