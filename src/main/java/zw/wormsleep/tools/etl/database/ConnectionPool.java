@@ -41,6 +41,10 @@ public class ConnectionPool {
     static final String MAX_IDLE_TIME = "maxIdleTime";
     // 测试连接的语句，若不设置则通过 getTables() 获取 MetaData 其速度将远慢于设定该语句的情况。（默认值：null）（推荐设置）
     static final String PREFERRED_TEST_QUERY = "preferredTestQuery";
+    //
+    static final String TEST_CONNECTION_ON_CHECKOUT = "testConnectionOnCheckout";
+    //
+    static final String TEST_CONNECTION_ON_CHECKIN = "testConnectionOnCheckin";
 
     private static Map<String, ComboPooledDataSource> pool = new HashMap<String, ComboPooledDataSource>();
 
@@ -80,6 +84,10 @@ public class ConnectionPool {
             cpds.setCheckoutTimeout(Integer.valueOf(poolConfig.get(NUM_HELPER_THREADS)));
         if (poolConfig.get(PREFERRED_TEST_QUERY) != null)
             cpds.setPreferredTestQuery(poolConfig.get(PREFERRED_TEST_QUERY));
+        if(poolConfig.get(TEST_CONNECTION_ON_CHECKOUT) != null)
+            cpds.setTestConnectionOnCheckout(Boolean.parseBoolean(poolConfig.get(TEST_CONNECTION_ON_CHECKOUT)));
+        if(poolConfig.get(TEST_CONNECTION_ON_CHECKIN) != null)
+            cpds.setTestConnectionOnCheckin(Boolean.parseBoolean(poolConfig.get(TEST_CONNECTION_ON_CHECKIN)));
 
         return cpds;
 

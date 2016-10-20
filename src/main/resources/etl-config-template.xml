@@ -380,9 +380,11 @@
 			<initialPoolSize>5</initialPoolSize>
 			<minPoolSize>3</minPoolSize>
 			<maxPoolSize>120</maxPoolSize>
-			<checkoutTimeout>10000</checkoutTimeout>
+			<checkoutTimeout>3000</checkoutTimeout>
 			<maxIdleTime>3600</maxIdleTime>
-			<idleConnectionTestPeriod>3600</idleConnectionTestPeriod>
+			<idleConnectionTestPeriod>30</idleConnectionTestPeriod>
+			<testConnectionOnCheckout>true</testConnectionOnCheckout>
+			<testConnectionOnCheckin>false</testConnectionOnCheckin>
 			<acquireIncrement>3</acquireIncrement>
 			<acquireRetryAttempts>3</acquireRetryAttempts>
 			<preferredTestQuery>SELECT 1</preferredTestQuery>
