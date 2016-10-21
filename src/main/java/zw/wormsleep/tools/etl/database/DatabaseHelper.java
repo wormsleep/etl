@@ -27,45 +27,6 @@ public class DatabaseHelper {
     static final String CONST_AND = " and ";
 
     /**
-     * 描述数据库元数据中列定义信息
-     *
-     * @author zhaowei
-     */
-    public static class SQLTypeMetaData {
-        private static Map<String, Integer> types;
-
-        private SQLTypeMetaData() {
-        }
-
-        private static void initTypes() {
-            types = new HashMap<String, Integer>();
-            // 元数据中定义列
-            types.put("TABLE_CAT", 1);
-            types.put("TABLE_SCHEM", 2);
-            types.put("TABLE_NAME", 3);
-            types.put("COLUMN_NAME", 4);
-            types.put("DATA_TYPE", 5);
-            types.put("TYPE_NAME", 6);
-            types.put("COLUMN_SIZE", 7);
-            types.put("DECIMAL_DIGITS", 9);
-            types.put("NULLABLE", 11);
-            types.put("COLUMN_DEF", 13);
-        }
-
-        /**
-         * 获取元数据定义列名称和索引
-         *
-         * @return
-         */
-        public static Map<String, Integer> getDefinition() {
-            if (types == null) {
-                initTypes();
-            }
-            return types;
-        }
-    }
-
-    /**
      * 将传入的值按若小于零则为零处理 例如: value="field1,field2" table="tablename"
      * additionalWhere=" whereexpress " 结果: update tablename set field1=case
      * when field1<0 then 0 else field1 end,field1=case when field2<0 then 0
@@ -342,7 +303,6 @@ public class DatabaseHelper {
         return resultSetList;
     }
 
-
     /**
      * 执行更新 SQL
      *
@@ -570,7 +530,7 @@ public class DatabaseHelper {
         StringBuffer fieldsPart = new StringBuffer();
         sql.append("\nselect ");
         for (String field : fields) {
-            if(!excludeFields.contains(field))
+            if (!excludeFields.contains(field))
                 fieldsPart.append(field + "\n,");
         }
         sql.append(fieldsPart.substring(0, fieldsPart.length() - 1));
@@ -783,7 +743,6 @@ public class DatabaseHelper {
         }
     }
 
-
     /**
      * 打印数据库表元数据对象
      *
@@ -971,7 +930,6 @@ public class DatabaseHelper {
 
         }
     }
-
 
     /**
      * 获取表元数据描述对象集
@@ -1187,11 +1145,12 @@ public class DatabaseHelper {
 
     /**
      * 扫描数据库表元信息，并返回扫描结果列表
-     * @param database 数据库配置节点名
-     * @param catalog 目录
-     * @param schemaPattern 大纲匹配模式
+     *
+     * @param database         数据库配置节点名
+     * @param catalog          目录
+     * @param schemaPattern    大纲匹配模式
      * @param tableNamePattern 表名匹配模式
-     * @param types 表类型 （默认为 "TABLE"） table type. Typical types are "TABLE", "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY", "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
+     * @param types            表类型 （默认为 "TABLE"） table type. Typical types are "TABLE", "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY", "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
      * @return
      */
     public static List<String> getTablesList(String database, String catalog, String schemaPattern, String tableNamePattern, String[] types) {
@@ -1249,6 +1208,7 @@ public class DatabaseHelper {
 
     /**
      * 通过 SQL 获取字段类型
+     *
      * @param database
      * @param sql
      * @return
@@ -1310,7 +1270,6 @@ public class DatabaseHelper {
 
         return columnsType;
     }
-
 
     /**
      * 获取表字段名集合
@@ -1513,6 +1472,45 @@ public class DatabaseHelper {
                     logger.error("SQL 异常 !", e);
                 }
             }
+        }
+    }
+
+    /**
+     * 描述数据库元数据中列定义信息
+     *
+     * @author zhaowei
+     */
+    public static class SQLTypeMetaData {
+        private static Map<String, Integer> types;
+
+        private SQLTypeMetaData() {
+        }
+
+        private static void initTypes() {
+            types = new HashMap<String, Integer>();
+            // 元数据中定义列
+            types.put("TABLE_CAT", 1);
+            types.put("TABLE_SCHEM", 2);
+            types.put("TABLE_NAME", 3);
+            types.put("COLUMN_NAME", 4);
+            types.put("DATA_TYPE", 5);
+            types.put("TYPE_NAME", 6);
+            types.put("COLUMN_SIZE", 7);
+            types.put("DECIMAL_DIGITS", 9);
+            types.put("NULLABLE", 11);
+            types.put("COLUMN_DEF", 13);
+        }
+
+        /**
+         * 获取元数据定义列名称和索引
+         *
+         * @return
+         */
+        public static Map<String, Integer> getDefinition() {
+            if (types == null) {
+                initTypes();
+            }
+            return types;
         }
     }
 

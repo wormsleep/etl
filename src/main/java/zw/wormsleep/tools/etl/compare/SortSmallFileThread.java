@@ -6,12 +6,14 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.Collator;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * 小文件排序线程
- *
+ * <p>
  * Created by wormsleep on 2016/2/14.
  */
 public class SortSmallFileThread extends Thread {

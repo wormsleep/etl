@@ -19,6 +19,24 @@ public class KeyKey {
         this.separator = separator;
     }
 
+    public static Comparator<KeyKey> key1Comparator() {
+        return new Comparator<KeyKey>() {
+            @Override
+            public int compare(KeyKey o1, KeyKey o2) {
+                return o1.getKey1().compareTo(o2.getKey1());
+            }
+        };
+    }
+
+    public static Comparator<KeyKey> key2Comparator() {
+        return new Comparator<KeyKey>() {
+            @Override
+            public int compare(KeyKey o1, KeyKey o2) {
+                return o1.getKey2().compareTo(o2.getKey2());
+            }
+        };
+    }
+
     public String getSeparator() {
         return separator;
     }
@@ -90,23 +108,5 @@ public class KeyKey {
     public String description() {
         return String.format(" KeyKey - key1: %s || key2: %s || index: %s || grouped: %s ",
                 key1, key2, String.valueOf(index), String.valueOf(grouped));
-    }
-
-    public static Comparator<KeyKey> key1Comparator() {
-        return new Comparator<KeyKey>() {
-            @Override
-            public int compare(KeyKey o1, KeyKey o2) {
-                return o1.getKey1().compareTo(o2.getKey1());
-            }
-        };
-    }
-
-    public static Comparator<KeyKey> key2Comparator() {
-        return new Comparator<KeyKey>() {
-            @Override
-            public int compare(KeyKey o1, KeyKey o2) {
-                return o1.getKey2().compareTo(o2.getKey2());
-            }
-        };
     }
 }

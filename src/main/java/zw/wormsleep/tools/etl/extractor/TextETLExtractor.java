@@ -1,31 +1,19 @@
 package zw.wormsleep.tools.etl.extractor;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Collection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import zw.wormsleep.tools.etl.ETLExtractor;
+import zw.wormsleep.tools.etl.config.ExtractConfig;
+
+import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import zw.wormsleep.tools.etl.ETLExtractor;
-import zw.wormsleep.tools.etl.config.ExtractConfig;
-
 public class TextETLExtractor implements ETLExtractor {
     final Logger logger = LoggerFactory.getLogger(TextETLExtractor.class);
-
-    private BufferedInputStream inp;
-
     private final int BUFFER_SIZE = 20 * 1024 * 1024;
-
+    private BufferedInputStream inp;
     private String encoding = "UTF-8";
     private String separator = "\t";
     private ExtractConfig extractConfig;
@@ -93,10 +81,10 @@ public class TextETLExtractor implements ETLExtractor {
 
         @Override
         public Map<String, Object> next() {
-            Map<String, Object> map =  null;
+            Map<String, Object> map = null;
 
             // 优化数据正确性 - 分隔符判断
-            if(line.contains(separator)) {
+            if (line.contains(separator)) {
                 String[] values = line.split(separator);
 
                 // 优化数据正确性 - 分割值数量判断

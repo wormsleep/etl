@@ -33,7 +33,8 @@ public class SimilarityIOThread extends Thread {
         this.fSeparator = fSeparator != null ? fSeparator : DEFAULT_SEPARATOR;
         this.fEncoding = fEncoding != null ? fEncoding : DEFAULT_ENCODING;
         this.s = s;
-        this.sSeparator = sSeparator != null ? sSeparator : DEFAULT_SEPARATOR;;
+        this.sSeparator = sSeparator != null ? sSeparator : DEFAULT_SEPARATOR;
+        ;
         this.sEncoding = sEncoding != null ? sEncoding : DEFAULT_ENCODING;
         this.threshold = threshold != null ? threshold : new Double("1.0");
         this.matched = matched;
@@ -57,22 +58,22 @@ public class SimilarityIOThread extends Thread {
             String fLine, sLine, first, second, fKey, sKey;
             int matchedCount = 0;
             int fIndex = 0;
-            while((fLine = fReader.readLine()) != null) {
+            while ((fLine = fReader.readLine()) != null) {
                 fIndex++;
                 String[] fls = fLine.split(fSeparator);
-                if(fls.length > 1) {
+                if (fls.length > 1) {
                     logger.debug("@@@ 线程：{} 待匹配记录：行 {} - {}", threadName, fIndex, fLine);
                     sReader = new BufferedReader(new InputStreamReader(new FileInputStream(s), sEncoding), BUFFER_SIZE);
-                    while((sLine = sReader.readLine()) != null) {
+                    while ((sLine = sReader.readLine()) != null) {
                         String[] sls = sLine.split(sSeparator);
-                        if(sls.length > 1) {
+                        if (sls.length > 1) {
                             first = fls[1];
                             second = sls[1];
-                            if(comparator.compare(first, second)) {
+                            if (comparator.compare(first, second)) {
                                 fKey = fls[0];
                                 sKey = sls[0];
                                 logger.info("@@@ 线程：{} 匹配 - {}\n匹配关键字\t{} - {}\n内容 1：{}\n内容 2：{}", threadName, matchedCount, fKey, sKey, first, second);
-                                if(matchedCount++ > 0) {
+                                if (matchedCount++ > 0) {
                                     mWriter.newLine();
                                 }
                                 mWriter.write(fKey + mSeparator + sKey);
@@ -89,7 +90,7 @@ public class SimilarityIOThread extends Thread {
         } catch (IOException e) {
             logger.error("IO 异常", e);
         } finally {
-            if(fReader != null) {
+            if (fReader != null) {
                 try {
                     fReader.close();
                 } catch (IOException e) {
@@ -98,7 +99,7 @@ public class SimilarityIOThread extends Thread {
                 fReader = null;
             }
 
-            if(sReader != null) {
+            if (sReader != null) {
                 try {
                     sReader.close();
                 } catch (IOException e) {
@@ -107,7 +108,7 @@ public class SimilarityIOThread extends Thread {
                 sReader = null;
             }
 
-            if(mWriter != null) {
+            if (mWriter != null) {
                 try {
                     mWriter.flush();
                     mWriter.close();

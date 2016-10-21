@@ -21,7 +21,7 @@ public class JaroWinklerDistanceComparator implements SimilarityComparator {
     }
 
     public boolean compareSpecial(String first, String second) {
-        if(threshold.compareTo(MAX_THRESHOLD) == 0 || (first.length() < 5 && second.length() < 5) ) {
+        if (threshold.compareTo(MAX_THRESHOLD) == 0 || (first.length() < 5 && second.length() < 5)) {
             return first.equalsIgnoreCase(second);
         } else {
             if (Math.abs(first.length() - second.length()) > 4) {

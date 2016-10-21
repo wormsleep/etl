@@ -91,7 +91,7 @@ public class SortedCompareUnits {
         int end = -1;
 
         // 优化 - 策略 - 若指定长度大于4认为是企业名称按范围提取数据，反之认为是人名仅提供匹配长度
-        if(length > 4) {
+        if (length > 4) {
             int upperLimit = (length - scope) > 4 ? (length - scope) : 4;
             int lowerLimit = length + scope;
 
@@ -111,12 +111,12 @@ public class SortedCompareUnits {
                 }
             }
 
-            return (end >= start && start >= 0 && end >= 0) ? Arrays.copyOfRange(compareUnits, start, end+1) : new CompareUnit[]{};
+            return (end >= start && start >= 0 && end >= 0) ? Arrays.copyOfRange(compareUnits, start, end + 1) : new CompareUnit[]{};
 
         } else {
             int position = Arrays.binarySearch(groupedLength, length);
 
-            return position >= 0 ? Arrays.copyOfRange(compareUnits, groupedLengthObject.get(groupedLength[position])[0], groupedLengthObject.get(groupedLength[position])[1]+1) : new CompareUnit[]{};
+            return position >= 0 ? Arrays.copyOfRange(compareUnits, groupedLengthObject.get(groupedLength[position])[0], groupedLengthObject.get(groupedLength[position])[1] + 1) : new CompareUnit[]{};
         }
     }
 

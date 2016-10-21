@@ -23,7 +23,7 @@ public class NumberFormatter implements Formatter {
     public Object format(Object value) {
         Object result = null;
 
-        if(value != null && !value.equals("")) {
+        if (value != null && !value.equals("")) {
             String vs = pretreat(String.valueOf(value));
 
             BigDecimal d = null;
@@ -32,8 +32,8 @@ public class NumberFormatter implements Formatter {
             } catch (Exception e) {
                 logger.debug("@@@ 无法转换 {} 为合法数值( N[{},{}] )！", value, length, precision);
             }
-            if(d != null) {
-                result = String.format("%."+precision+"f", d);
+            if (d != null) {
+                result = String.format("%." + precision + "f", d);
             }
 
         }

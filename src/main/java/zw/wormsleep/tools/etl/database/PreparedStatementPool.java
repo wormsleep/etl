@@ -1,22 +1,16 @@
 package zw.wormsleep.tools.etl.database;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import zw.wormsleep.tools.etl.config.LoadConfig;
+
 import java.beans.PropertyVetoException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import zw.wormsleep.tools.etl.config.LoadConfig;
 
 /**
  * 为了支持静态 PreparedStatement 对象集使用

@@ -1,15 +1,14 @@
 package zw.wormsleep.tools.etl.database;
 
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.beans.PropertyVetoException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 public class ConnectionPool {
     static final Logger logger = LoggerFactory.getLogger(ConnectionPool.class);
@@ -84,9 +83,9 @@ public class ConnectionPool {
             cpds.setCheckoutTimeout(Integer.valueOf(poolConfig.get(NUM_HELPER_THREADS)));
         if (poolConfig.get(PREFERRED_TEST_QUERY) != null)
             cpds.setPreferredTestQuery(poolConfig.get(PREFERRED_TEST_QUERY));
-        if(poolConfig.get(TEST_CONNECTION_ON_CHECKOUT) != null)
+        if (poolConfig.get(TEST_CONNECTION_ON_CHECKOUT) != null)
             cpds.setTestConnectionOnCheckout(Boolean.parseBoolean(poolConfig.get(TEST_CONNECTION_ON_CHECKOUT)));
-        if(poolConfig.get(TEST_CONNECTION_ON_CHECKIN) != null)
+        if (poolConfig.get(TEST_CONNECTION_ON_CHECKIN) != null)
             cpds.setTestConnectionOnCheckin(Boolean.parseBoolean(poolConfig.get(TEST_CONNECTION_ON_CHECKIN)));
 
         return cpds;
@@ -104,7 +103,7 @@ public class ConnectionPool {
         }
 
         logger.info("@@@ 数据库节点：{} 从连接池获取连接成功！\n" +
-                "连接池状态 - 总连接数：{} - 使用：{} - 空闲：{}",
+                        "连接池状态 - 总连接数：{} - 使用：{} - 空闲：{}",
                 database, cpds.getNumConnections(), cpds.getNumBusyConnections(), cpds.getNumIdleConnections());
 
         return cpds.getConnection();

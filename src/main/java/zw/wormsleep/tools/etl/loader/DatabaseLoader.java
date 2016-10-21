@@ -11,7 +11,10 @@ import zw.wormsleep.tools.etl.database.DatabaseHelper;
 
 import java.beans.PropertyVetoException;
 import java.sql.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,7 +58,6 @@ public class DatabaseLoader implements ETLLoader {
         boolean ignoreUpdate = loadConfig.ignoreUpdate();
 
 
-
         /**
          * selectSQL 的获取或生成判断流程
          *
@@ -63,7 +65,7 @@ public class DatabaseLoader implements ETLLoader {
          * 2. 若配置中已定义 <columns>...</columns> 则按配置生成
          * 3. 若无配置则通过根据 selectSQL 生成
          *
-          */
+         */
         String selectSQL = loadConfig.getSelectSQL();
 
         // 防呆设计 - 在语句末尾添加 and 1=0

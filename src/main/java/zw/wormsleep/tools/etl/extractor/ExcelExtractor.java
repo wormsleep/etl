@@ -1,114 +1,112 @@
 package zw.wormsleep.tools.etl.extractor;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import zw.wormsleep.tools.etl.ETLExtractor;
 import zw.wormsleep.tools.etl.config.ExtractConfig;
 import zw.wormsleep.tools.etl.utils.ExcelUtils;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 public class ExcelExtractor implements ETLExtractor {
-	final Logger logger = LoggerFactory.getLogger(ExcelExtractor.class);
+    final Logger logger = LoggerFactory.getLogger(ExcelExtractor.class);
 
-	private Sheet sheet;
-	private ExtractConfig extractConfig;
-	private int rowStart = 0;
-	private int rowEnd = 0;
-	private Map<String, Integer> columnPosition = new HashMap<String, Integer>();
+    private Sheet sheet;
+    private ExtractConfig extractConfig;
+    private int rowStart = 0;
+    private int rowEnd = 0;
+    private Map<String, Integer> columnPosition = new HashMap<String, Integer>();
 
-	public ExcelExtractor(Sheet sheet, ExtractConfig extractConfig)
-			throws InvalidFormatException, IOException {
-		this.sheet = sheet;
-		this.extractConfig = extractConfig;
-		initial();
-	}
+    public ExcelExtractor(Sheet sheet, ExtractConfig extractConfig)
+            throws InvalidFormatException, IOException {
+        this.sheet = sheet;
+        this.extractConfig = extractConfig;
+        initial();
+    }
 
-	@SuppressWarnings("unchecked")
-	private void initial() {
+    @SuppressWarnings("unchecked")
+    private void initial() {
 
-		int rowCount = sheet.getLastRowNum();
+        int rowCount = sheet.getLastRowNum();
 
-		boolean hasHeader = extractConfig.hasHeader();
-		int definedRowStart = extractConfig.getRowStart();
-		int definedRowEnd = extractConfig.getRowEnd();
-		int definedMaxHeaderCheckRows = extractConfig.getMaxHeaderCheckRows();
+        boolean hasHeader = extractConfig.hasHeader();
+        int definedRowStart = extractConfig.getRowStart();
+        int definedRowEnd = extractConfig.getRowEnd();
+        int definedMaxHeaderCheckRows = extractConfig.getMaxHeaderCheckRows();
 
-		
 
-		// 若需要进行匹配检查，则进行匹配组装
-		if (hasHeader) {
-			Map<String, String> checkColumns = extractConfig.getCheckColumns();
-			
-			Map<String, Object> matchResult = ExcelUtils.getMatchedInfo(
-					sheet, checkColumns, definedMaxHeaderCheckRows);
+        // 若需要进行匹配检查，则进行匹配组装
+        if (hasHeader) {
+            Map<String, String> checkColumns = extractConfig.getCheckColumns();
 
-			if (matchResult.get("matched").equals(true)) {
-				rowStart = (Integer) matchResult.get("rowstart");
-				if (definedRowEnd > 0) {
-					rowEnd = Math.min(definedRowEnd, rowCount);
-				} else {
-					rowEnd = rowCount;
-				}
-				columnPosition = (Map<String, Integer>) matchResult.get("position");
-			}
+            Map<String, Object> matchResult = ExcelUtils.getMatchedInfo(
+                    sheet, checkColumns, definedMaxHeaderCheckRows);
 
-		} else { // 进行非匹配组装
+            if (matchResult.get("matched").equals(true)) {
+                rowStart = (Integer) matchResult.get("rowstart");
+                if (definedRowEnd > 0) {
+                    rowEnd = Math.min(definedRowEnd, rowCount);
+                } else {
+                    rowEnd = rowCount;
+                }
+                columnPosition = (Map<String, Integer>) matchResult.get("position");
+            }
 
-			rowStart = Math.max(0, definedRowStart);
-			rowEnd = Math.max(rowCount, definedRowStart);
-			
-			columnPosition = (Map<String, Integer>) extractConfig.getIndexedColumns();
+        } else { // 进行非匹配组装
 
-		}
+            rowStart = Math.max(0, definedRowStart);
+            rowEnd = Math.max(rowCount, definedRowStart);
 
-		logger.debug("@@@ - 数据抽取 - 起始行 {} 终止行 {} 定位列 {}", rowStart, rowEnd,
-				columnPosition);
+            columnPosition = (Map<String, Integer>) extractConfig.getIndexedColumns();
 
-	}
+        }
 
-	@Override
-	public Iterator<Map<String, Object>> walker() {
-		return new Walker();
-	}
+        logger.debug("@@@ - 数据抽取 - 起始行 {} 终止行 {} 定位列 {}", rowStart, rowEnd,
+                columnPosition);
 
-	private class Walker implements Iterator<Map<String, Object>> {
-		private int rowIndex = rowStart;
+    }
 
-		@Override
-		public Map<String, Object> next() {
-			Map<String, Object> map = new HashMap<String, Object>();
+    @Override
+    public Iterator<Map<String, Object>> walker() {
+        return new Walker();
+    }
 
-			Row row = sheet.getRow(rowIndex);
+    private class Walker implements Iterator<Map<String, Object>> {
+        private int rowIndex = rowStart;
 
-			for (String field : columnPosition.keySet()) {
-				Cell cell = row.getCell(columnPosition.get(field));
-				map.put(field, ExcelUtils.getCellValue(cell));
-			}
+        @Override
+        public Map<String, Object> next() {
+            Map<String, Object> map = new HashMap<String, Object>();
 
-			rowIndex++;
+            Row row = sheet.getRow(rowIndex);
 
-			return map;
-		}
+            for (String field : columnPosition.keySet()) {
+                Cell cell = row.getCell(columnPosition.get(field));
+                map.put(field, ExcelUtils.getCellValue(cell));
+            }
 
-		@Override
-		public boolean hasNext() {
-			return (rowIndex <= rowEnd);
-		}
+            rowIndex++;
 
-		@Override
-		public void remove() {
+            return map;
+        }
 
-		}
+        @Override
+        public boolean hasNext() {
+            return (rowIndex <= rowEnd);
+        }
 
-	}
+        @Override
+        public void remove() {
+
+        }
+
+    }
 
 }

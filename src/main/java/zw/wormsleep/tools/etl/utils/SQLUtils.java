@@ -7,17 +7,17 @@ import java.util.List;
  */
 public class SQLUtils {
 
-    public static class Transformer{
+    public static class Transformer {
         public static String getSelectWithAliasLowerCaseColumnName(List<String> columnsName, String tableName) {
             StringBuffer select = new StringBuffer();
 
             select.append("select ");
 
-            for(String columnName : columnsName) {
+            for (String columnName : columnsName) {
                 select.append(columnName + " as " + columnName.toLowerCase() + ",");
             }
 
-            return select.toString().substring(0, select.length()-1) + " from " + tableName;
+            return select.toString().substring(0, select.length() - 1) + " from " + tableName;
         }
     }
 }

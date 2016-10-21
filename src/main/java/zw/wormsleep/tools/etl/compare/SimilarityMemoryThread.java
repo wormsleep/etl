@@ -4,7 +4,8 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,7 +86,7 @@ public class SimilarityMemoryThread extends Thread {
 
             long endTime = System.currentTimeMillis();
             long consuming = (endTime - startTime) / 1000;
-            logger.info("线程：{} 耗时 : {} ", threadName, (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟 (约为 "+String.valueOf(consuming % 60)+" 秒)");
+            logger.info("线程：{} 耗时 : {} ", threadName, (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟 (约为 " + String.valueOf(consuming % 60) + " 秒)");
 
         } catch (IOException e) {
             logger.error("IO 异常", e);

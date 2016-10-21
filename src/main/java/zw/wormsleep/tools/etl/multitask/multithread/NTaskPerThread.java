@@ -32,7 +32,7 @@ public class NTaskPerThread implements MultiTaskMultiThread {
     public void executeBatch() {
 
         // 无任务直接返回
-        if(taskCount < 1) return;
+        if (taskCount < 1) return;
 
         // 若任务数小于线程数则令线程数等于任务数
         if (taskCount < threadCount) {

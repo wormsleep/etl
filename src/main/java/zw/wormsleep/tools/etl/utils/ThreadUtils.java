@@ -21,6 +21,7 @@ public class ThreadUtils {
 
     /**
      * 生成供批量文件排序使用的线程池（类型）
+     *
      * @param fSize 文件分割总数
      * @param power 倍数
      * @return

@@ -1,12 +1,14 @@
 package zw.wormsleep.tools.etl.config;
 
-import java.io.File;
-import java.util.*;
-
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
-
 import zw.wormsleep.tools.etl.utils.ConfigParserUtils;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class SimpleLoadConfig implements LoadConfig {
 

@@ -288,32 +288,6 @@ public class ConfigBuilderUtils {
      */
     public static class Assistant {
         /**
-         * 分析器定义
-         */
-        public interface Analyst {
-            /**
-             * 构造配置文件中的 columns 节点内容, 以便快速填写配置文件
-             *
-             * @param type 生成类型 - 0: 仅 field 节点; 1: 带 index 节点; 2: 带 name 节点
-             * @return
-             */
-            public ConfigurationNode buildColumnsNode(int type);
-        }
-
-        /**
-         * 列名过滤器
-         */
-        public interface FilterName {
-            /**
-             * 过滤
-             *
-             * @param name
-             * @return
-             */
-            public boolean accept(String name);
-        }
-
-        /**
          * SQL 类数据分析器 - 构造配置文件中的 columns 节点及子节点
          *
          * @param database  数据库配置节点名称
@@ -562,7 +536,6 @@ public class ConfigBuilderUtils {
             };
         }
 
-
         /**
          * 增加 column 节点属性 - 依据数据库列元数据
          *
@@ -604,6 +577,33 @@ public class ConfigBuilderUtils {
                     debugStr.append("\t<column>\n");
                     break;
             }
+        }
+
+        /**
+         * 分析器定义
+         */
+        public interface Analyst {
+            /**
+             * 构造配置文件中的 columns 节点内容, 以便快速填写配置文件
+             *
+             * @param type 生成类型 - 0: 仅 field 节点; 1: 带 index 节点; 2: 带 name 节点
+             * @return
+             */
+            public ConfigurationNode buildColumnsNode(int type);
+        }
+
+
+        /**
+         * 列名过滤器
+         */
+        public interface FilterName {
+            /**
+             * 过滤
+             *
+             * @param name
+             * @return
+             */
+            public boolean accept(String name);
         }
 
     }

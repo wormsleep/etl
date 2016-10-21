@@ -71,7 +71,7 @@ public class SimilarityMemoryLimitedScopeThread extends Thread {
             for (CompareUnit fcu : fScus.getCompareUnits()) {
                 curLen = fcu.length;
                 if (currentLength > 0) {
-                    if(currentLength < curLen) {
+                    if (currentLength < curLen) {
                         currentLength = curLen;
                         currentLengthCompareUnits = sScus.getLimitedCompareUnits(currentLength, similarityLimitedLengthScope);
                     }
@@ -104,7 +104,7 @@ public class SimilarityMemoryLimitedScopeThread extends Thread {
 
             long endTime = System.currentTimeMillis();
             long consuming = (endTime - startTime) / 1000;
-            logger.info("线程：{} 耗时 : {} ", threadName, (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟 (约为 "+String.valueOf(consuming % 60)+" 秒)");
+            logger.info("线程：{} 耗时 : {} ", threadName, (consuming / 60) > 0 ? (String.valueOf(consuming / 60) + " 分钟") : "小于 1 分钟 (约为 " + String.valueOf(consuming % 60) + " 秒)");
 
         } catch (IOException e) {
             logger.error("IO 异常", e);

@@ -4,5 +4,5 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 
 public interface DatabaseMetadataPrinter {
-	void print(Connection conn, DatabaseMetaData dmd);
+    void print(Connection conn, DatabaseMetaData dmd);
 }
